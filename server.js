@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 /**
  * Simple YUI combo handler using NodeJS and Express. Stick a caching and
  * compressing proxy in front of this and you're ready to rock in production.
@@ -29,112 +28,118 @@ var express = require('express'),
     fs      = require('fs'),
     path    = require('path'),
 
-    // Port to listen on.
-    PORT = 80,
+    config  = require('./config');
 
-    // Absolute path to the public YUI3 directory.
-    YUI3_PATH = '/home/node/public/yui/yui3',
-
-    app = express.createServer(
-        // express.logger(),
-        express.conditionalGet()
-    );
+// -- Express app and middleware -----------------------------------------------
+app = express.createServer(
+  // express.logger(),
+  express.conditionalGet()
+);
 
 // -- Routes -------------------------------------------------------------------
-app.get('/yui3', function (req, res) {
-    var body    = [],
-        query   = parseQuery(req.url) || [],
-        pending = query.length,
-        type    = pending && getMimeType(path.extname(query[0])),
+for (var route in config.roots) {
+  (function () {
+    // Intentionally using the sync method because this only runs once on
+    // startup, and we want it to throw if there's an error.
+    var root = fs.realpathSync(config.roots[route]);
 
-        lastModified;
-
-    function finish() {
-        if (lastModified) {
-            res.header('Last-Modified', lastModified.toUTCString());
-        }
-
-        res.send(body.join("\n"), {
-            'Content-Type': type + ';charset=utf-8'
-        });
-    }
-
-    function notFound() {
-        res.send(400);
-    }
-
-    query.forEach(function (relativePath, i) {
-        var absolutePath;
-
-        // Skip empty params.
-        if (!relativePath) {
-            pending -= 1;
-            return;
-        }
-
-        absolutePath = path.normalize(path.join(YUI3_PATH, relativePath));
-
-        // Don't allow traversal above the root path.
-        if (absolutePath.indexOf(YUI3_PATH) !== 0) {
-            res.send(403); // TODO: nicer error handling
-            return;
-        }
-
-        fs.readFile(absolutePath, 'utf8', function (err, data) {
-            if (err) { return notFound(); }
-
-            body[i] = data;
-
-            fs.stat(absolutePath, function (err, stats) {
-                var mtime;
-
-                if (!err) {
-                    mtime = new Date(stats.mtime);
-
-                    if (!lastModified || mtime > lastModified) {
-                        lastModified = mtime;
-                    }
-                }
-
-                pending -= 1;
-
-                if (pending === 0) {
-                    finish();
-                }
-            });
-        });
+    app.get(route, function (req, res) {
+      comboHandler(root, req, res);
     });
-});
-
-// -- Helpers ------------------------------------------------------------------
-var defaultMimeType = 'application/octet-stream',
-
-    mimeTypes = {
-        '.css' : 'text/css',
-        '.js'  : 'application/javascript',
-        '.json': 'application/json',
-        '.txt' : 'text/plain',
-        '.xml' : 'application/xml'
-    };
-
-function decode(string) {
-    return decodeURIComponent(string).replace(/\+/g, ' ');
+  }());
 }
 
-function getMimeType(extension) {
-    extension = (extension.charAt(0) === '.' ? extension : '.' + extension).toLowerCase();
-    return mimeTypes[extension] || defaultMimeType;
+// -- Functions ----------------------------------------------------------------
+function comboHandler(rootPath, req, res) {
+  var body    = [],
+      query   = parseQuery(req.url),
+      pending = query.length,
+      type    = pending && getMimeType(query[0]),
+      lastModified,
+
+  finish = function () {
+    if (lastModified) {
+      res.header('Last-Modified', lastModified.toUTCString());
+    }
+
+    res.send(body.join("\n"), {
+      'Content-Type': type + ';charset=utf-8'
+    });
+  },
+
+  notFound = function () {
+    res.send(400);
+  };
+
+  if (!pending) {
+    return notFound();
+  }
+
+  query.forEach(function (relativePath, i) {
+    var absolutePath;
+
+    // Skip empty params.
+    if (!relativePath) {
+      pending -= 1;
+      return;
+    }
+
+    absolutePath = path.normalize(path.join(rootPath, relativePath));
+
+    fs.realpath(absolutePath, function(err, absolutePath) {
+      // Don't allow traversal above the root path.
+      if (err || absolutePath.indexOf(rootPath) !== 0) {
+        res.send(403); // TODO: nicer error handling
+        return;
+      }
+
+      fs.readFile(absolutePath, 'utf8', function (err, data) {
+        if (err) { return notFound(); }
+
+        body[i] = data;
+
+        fs.stat(absolutePath, function (err, stats) {
+          var mtime;
+
+          if (!err) {
+            mtime = new Date(stats.mtime);
+
+            if (!lastModified || mtime > lastModified) {
+              lastModified = mtime;
+            }
+          }
+
+          pending -= 1;
+
+          if (pending === 0) {
+            finish();
+          }
+        });
+      });
+    });
+  });
+}
+
+function decode(string) {
+  return decodeURIComponent(string).replace(/\+/g, ' ');
+}
+
+function getMimeType(filename) {
+  return config.mimeTypes[path.extname(filename).toLowerCase()];
 }
 
 // Because querystring.parse() is stupid.
-function parseQuery(query) {
-    var parsed = [];
+function parseQuery(url) {
+  var parsed = [],
+      query  = url.split('?')[1];
 
-    query.split('?')[1].split('&').forEach(function (item) {
-        parsed.push(decode(item.split('=')[0]));
+  if (query) {
+    query.split('&').forEach(function (item) {
+      parsed.push(decode(item.split('=')[0]));
     });
+  }
 
-    return parsed;
+  return parsed;
 }
 
-app.listen(PORT);
+app.listen(config.port || 8000);
