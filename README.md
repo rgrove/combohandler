@@ -13,7 +13,11 @@ Nginx or something in front of it and you should be ready to rock in production.
 Installation
 ------------
 
-Grab the code from the [GitHub repo][repo]:
+Install Express if you don't already have it:
+
+    npm install express
+
+Grab Combo Handler from the [GitHub repo][repo]:
 
     git clone git://github.com/rgrove/combohandler.git
 
@@ -27,7 +31,7 @@ up the combo handler using [Spark][spark] or [Spark2][spark2].
 License
 -------
 
-Copyright (c) 2011 Ryan Grove <ryan@wonko.com>.
+Copyright (c) 2011 Ryan Grove (ryan@wonko.com).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
