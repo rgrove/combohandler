@@ -17,7 +17,7 @@ Install Express if you don't already have it:
 
     npm install express
 
-Grab Combo Handler from the [GitHub repo][repo]:
+Grab the combo handler from the [GitHub repo][repo]:
 
     git clone git://github.com/rgrove/combohandler.git
 
@@ -27,6 +27,26 @@ up the combo handler using [Spark][spark] or [Spark2][spark2].
 [repo]: https://github.com/rgrove/combohandler
 [spark]: https://github.com/senchalabs/spark
 [spark2]: https://github.com/davglass/spark2
+
+Usage with YUI 3
+----------------
+
+With a tiny bit of configuration, you can tell YUI 3 to use your custom combo
+handler instead of the Yahoo! combo handler.
+
+Here's a working example that uses a live combo handler instance running on
+fuji.jetpants.com to serve the latest YUI 3 code from git:
+
+    <script src="http://fuji.jetpants.com/yui/combo/yui3?build/yui/yui-min.js&amp;build/loader/loader-min.js"></script>
+    <script>
+    var Y = YUI({
+      comboBase: 'http://fuji.jetpants.com/yui/combo/yui3?',
+      combine  : true,
+      root     : 'build/'
+    }).use('node', function (Y) {
+      // YUI will now automatically load modules from the custom combo handler.
+    });
+    </script>
 
 License
 -------
