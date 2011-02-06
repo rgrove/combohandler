@@ -94,13 +94,16 @@ exports.combine = function (config) {
   };
 };
 
-// -- Custom Errors ------------------------------------------------------------
+// BadRequest is used for all filesystem-related errors, including when a
+// requested file can't be found (a NotFound error wouldn't be appropriate in
+// that case since the route itself exists; it's the request that's at fault).
 function BadRequest(message) {
   this.name = 'BadRequest';
   Error.call(this, message || 'Bad request.');
   Error.captureStackTrace(this, arguments.callee);
 }
 sys.inherits(BadRequest, Error);
+exports.BadRequest = BadRequest; // exported to allow instanceof checks
 
 // -- Private Methods ----------------------------------------------------------
 function decode(string) {
