@@ -10,16 +10,5 @@ module.exports = {
   roots: {
     '/yui2': '/local/path/to/yui2',
     '/yui3': '/local/path/to/yui3'
-  },
-
-  // MIME types supported and recognized by this combo handler. Attempts to
-  // combine one or more files with an extension not in this mapping will result
-  // in a 400 response.
-  mimeTypes: {
-    '.css' : 'text/css',
-    '.js'  : 'application/javascript',
-    '.json': 'application/json',
-    '.txt' : 'text/plain',
-    '.xml' : 'application/xml'
   }
 };
