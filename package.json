@@ -1,0 +1,38 @@
+{
+  "name"       : "combohandler",
+  "description": "Simple Yahoo!-style combo handler.",
+  "version"    : "0.1.0",
+  "keywords"   : ["combo", "combine", "cdn", "yui", "yui3", "js", "css"],
+  "homepage"   : "https//github.com/rgrove/combohandler",
+
+  "repository": {
+    "type": "git",
+    "url" : "git://github.com/rgrove/combohandler.git"
+  },
+
+  "author": {
+    "name" : "Ryan Grove",
+    "email": "ryan@wonko.com",
+    "url"  : "http://wonko.com/"
+  },
+
+  "engines": ["node >=0.2.0"],
+
+  "dependencies": {
+    "express": "1.0.x"
+  },
+
+  "main": "index.js",
+
+  "directories": {"lib": "./lib"},
+
+  "files": [
+    "lib/server.js",
+    "LICENSE",
+    "README.md",
+    "app.js",
+    "config.sample.js",
+    "index.js",
+    "package.json"
+  ]
+}
