@@ -34,11 +34,13 @@ Or just clone the [GitHub repo](https://github.com/rgrove/combohandler):
 Usage
 -----
 
-The `combohandler` module provides a configurable Connect middleware that can be used to add combo handling capability to any Connect-based request handler (like Express).
+The `combohandler` module provides a configurable Connect middleware that can be
+used to add combo handling capability to any Connect-based request handler (like
+Express).
 
-The `combohandler/server` module creates a standalone Express server
-instance, or augments an existing server, to perform combo handling for a
-configurable number of routes.
+The `combohandler/server` module creates a standalone Express server instance,
+or augments an existing server, to perform combo handling for a set of
+configurable routes.
 
 
 ### As Express middleware
