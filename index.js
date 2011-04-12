@@ -38,7 +38,7 @@ exports.combine = function (config) {
       }
 
       res.header('Content-Type', (type || 'text/plain') + ';charset=utf-8');
-      res.body = body.join("\n");
+      res.body = body.join('\n');
 
       next();
     }
