@@ -38,7 +38,7 @@ The `combohandler` module provides a configurable Connect middleware that can be
 used to add combo handling capability to any Connect-based request handler (like
 Express).
 
-The `combohandler/server` module creates a standalone Express server instance,
+The `combohandler/lib/server` module creates a standalone Express server instance,
 or augments an existing server, to perform combo handling for a set of
 configurable routes.
 
@@ -118,11 +118,11 @@ multiple routes with different root paths:
 ### Creating a server
 
 If you just want to get a server up and running quickly by specifying a mapping
-of routes to local root paths, use the `combohandler/server` module. It creates
+of routes to local root paths, use the `combohandler/lib/server` module. It creates
 a barebones Express server that will perform combo handling on the routes you
 specify:
 
-    var comboServer = require('combohandler/server'),
+    var comboServer = require('combohandler/lib/server'),
         app;
 
     app = comboServer({
@@ -141,7 +141,7 @@ If you already have an existing Express server instance and just want to add
 some combo handled routes to it easily, you can augment your existing server
 with combo handled routes:
 
-    var comboServer = require('combohandler/server');
+    var comboServer = require('combohandler/lib/server');
 
     comboServer({
       roots: {
