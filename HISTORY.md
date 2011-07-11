@@ -1,6 +1,12 @@
 Combo Handler History
 =====================
 
+0.1.2 (2011-07-11)
+------------------
+
+* Chasing the latest Express and Connect versions again.
+
+
 0.1.1 (2011-04-12)
 ------------------
 
