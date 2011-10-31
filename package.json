@@ -1,8 +1,11 @@
 {
   "name"       : "combohandler",
   "description": "Simple Yahoo!-style combo handler.",
-  "version"    : "0.1.2",
-  "keywords"   : ["combo", "combine", "cdn", "yui", "yui3", "js", "css", "performance"],
+  "version"    : "0.1.3",
+  "keywords"   : [
+    "combo", "combohandler", "combohandle", "combine", "cdn", "yui", "yui3",
+    "yui 3", "js", "css", "performance"
+  ],
   "homepage"   : "https://github.com/rgrove/combohandler",
 
   "repository": {
