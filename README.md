@@ -5,7 +5,7 @@ This is a simple combo handler for Node.js, usable either as [Connect][]
 middleware or as an [Express][] server. It works just like the combo handler
 service on the Yahoo! CDN, which you'll be familiar with if you've used YUI.
 
-The combo handler is compatible with the [YUI 3][] Loader, so you can use it to
+The combo handler is compatible with the [YUI][] Loader, so you can use it to
 host YUI, or you can use it with any other JavaScript or CSS if you're willing
 to construct the combo URLs yourself.
 
@@ -16,7 +16,7 @@ production.
 [Connect]: https://github.com/senchalabs/connect
 [Express]: https://github.com/visionmedia/express
 [Nginx]: http://nginx.org/
-[YUI 3]: http://developer.yahoo.com/yui/3/
+[YUI]: http://yuilibrary.com/
 
 
 Installation
@@ -48,14 +48,18 @@ configurable routes.
 The combo handler middleware can be used as application-wide middleware for all
 routes:
 
-    var combo = require('combohandler');
-    app.use(combo.combine({rootPath: '/local/path/to/files'}));
+```js
+var combo = require('combohandler');
+app.use(combo.combine({rootPath: '/local/path/to/files'}));
+```
 
 Or as route middleware for a specific route:
 
-    app.get('/foo', combo.combine({rootPath: '/local/path/to/foo'}), function (req, res) {
-      res.send(res.body, 200);
-    });
+```js
+app.get('/foo', combo.combine({rootPath: '/local/path/to/foo'}), function (req, res) {
+  res.send(res.body, 200);
+});
+```
 
 In either case, the middleware will perform combo handling for files under the
 specified local `rootPath` when requested using a URL with one or more file paths
@@ -75,45 +79,46 @@ exist will result in a `BadRequest` error being bubbled up.
 Here's a basic Express app that uses the combo handler as route middleware for
 multiple routes with different root paths:
 
-    var combo   = require('combohandler'),
-        express = require('express'),
+```js
+var combo   = require('combohandler'),
+    express = require('express'),
 
-        app = express.createServer();
+    app = express.createServer();
 
-    app.configure(function () {
-      app.use(express.conditionalGet());
-      app.use(express.errorHandler());
-    });
+app.configure(function () {
+  app.use(express.conditionalGet());
+  app.use(express.errorHandler());
+});
 
-    // Return a 400 response if the combo handler generates a BadRequest error.
-    app.error(function (err, req, res, next) {
-      if (err instanceof combo.BadRequest) {
-        res.send('Bad request.', {'Content-Type': 'text/plain'}, 400);
-      } else {
-        next();
-      }
-    });
+// Return a 400 response if the combo handler generates a BadRequest error.
+app.error(function (err, req, res, next) {
+  if (err instanceof combo.BadRequest) {
+    res.send('Bad request.', {'Content-Type': 'text/plain'}, 400);
+  } else {
+    next();
+  }
+});
 
-    // Given a root path that points to a YUI 2 root folder, this route will
-    // handle URLs like:
-    //
-    // http://example.com/yui2?build/yahoo/yahoo-min.js&build/yuiloader/yuiloader-min.js
-    //
-    app.get('/yui2', combo.combine({rootPath: '/local/path/to/yui2'}), function (req, res) {
-      res.send(res.body, 200);
-    });
+// Given a root path that points to a YUI 2 root folder, this route will
+// handle URLs like:
+//
+// http://example.com/yui2?build/yahoo/yahoo-min.js&build/yuiloader/yuiloader-min.js
+//
+app.get('/yui2', combo.combine({rootPath: '/local/path/to/yui2'}), function (req, res) {
+  res.send(res.body, 200);
+});
 
-    // Given a root path that points to a YUI 3 root folder, this route will
-    // handle URLs like:
-    //
-    // http://example.com/yui3?build/yui/yui-min.js&build/loader/loader-min.js
-    //
-    app.get('/yui3', combo.combine({rootPath: '/local/path/to/yui3'}), function (req, res) {
-      res.send(res.body, 200);
-    });
+// Given a root path that points to a YUI 3 root folder, this route will
+// handle URLs like:
+//
+// http://example.com/yui3?build/yui/yui-min.js&build/loader/loader-min.js
+//
+app.get('/yui3', combo.combine({rootPath: '/local/path/to/yui3'}), function (req, res) {
+  res.send(res.body, 200);
+});
 
-    app.listen(3000);
-
+app.listen(3000);
+```
 
 ### Creating a server
 
@@ -122,18 +127,19 @@ of routes to local root paths, use the `combohandler/lib/server` module. It crea
 a barebones Express server that will perform combo handling on the routes you
 specify:
 
-    var comboServer = require('combohandler/lib/server'),
-        app;
+```js
+var comboServer = require('combohandler/lib/server'),
+    app;
 
-    app = comboServer({
-      roots: {
-        '/yui2': '/local/path/to/yui2',
-        '/yui3': '/local/path/to/yui3'
-      }
-    });
+app = comboServer({
+  roots: {
+    '/yui2': '/local/path/to/yui2',
+    '/yui3': '/local/path/to/yui3'
+  }
+});
 
-    app.listen(3000);
-
+app.listen(3000);
+```
 
 ### Augmenting an existing server
 
@@ -141,49 +147,54 @@ If you already have an existing Express server instance and just want to add
 some combo handled routes to it easily, you can augment your existing server
 with combo handled routes:
 
-    var comboServer = require('combohandler/lib/server');
+```js
+var comboServer = require('combohandler/lib/server');
 
-    comboServer({
-      roots: {
-        '/yui2': '/local/path/to/yui2',
-        '/yui3': '/local/path/to/yui3'
-      }
-    }, myApp); // Assuming `myApp` is a pre-existing Express server instance.
-
+comboServer({
+  roots: {
+    '/yui2': '/local/path/to/yui2',
+    '/yui3': '/local/path/to/yui3'
+  }
+}, myApp); // Assuming `myApp` is a pre-existing Express server instance.
+```
 
 ### Running the included standalone server
 
-If you clone (or download) the GitHub repo, you can rename `config.sample.js` to
-`config.js`, edit it to your liking, and then simply use [Spark][] or [Spark2][]
-to run `app.js` as a standalone server.
+If you clone or download the GitHub repo, you can rename `config.sample.js` to
+`config.js`, edit it to your liking, and then simply run `app.js` to start a
+standalone server in development mode.
 
-    npm install -g spark2
     git clone git://github.com/rgrove/combohandler.git
     cd combohandler
-    spark2 -v
+    mv config.sample.js config.js
+    ./app.js
 
-[Spark]: https://github.com/senchalabs/spark
-[Spark2]: https://github.com/davglass/spark2
+To run the standalone server in production mode, set the `NODE_ENV` variable to
+`production` before running it:
+
+    NODE_ENV=production ./app.js
 
 
 Using as a YUI 3 combo handler
 ------------------------------
 
-With a tiny bit of configuration, you can tell YUI 3 to use your custom combo
+With a tiny bit of configuration, you can tell YUI to use your custom combo
 handler instead of the Yahoo! combo handler. Here's a working example that uses
 a live combo handler instance running on fuji.jetpants.com to serve the latest
 code from YUI's git repo:
 
-    <script src="http://fuji.jetpants.com/yui/combo/yui3?build/yui/yui-min.js"></script>
-    <script>
-    var Y = YUI({
-      comboBase: 'http://fuji.jetpants.com/yui/combo/yui3?',
-      combine  : true,
-      root     : 'build/'
-    }).use('node', function (Y) {
-      // YUI will now automatically load modules from the custom combo handler.
-    });
-    </script>
+```js
+<script src="http://fuji.jetpants.com/yui/combo/yui3?build/yui/yui-min.js"></script>
+<script>
+var Y = YUI({
+  comboBase: 'http://fuji.jetpants.com/yui/combo/yui3?',
+  combine  : true,
+  root     : 'build/'
+}).use('node', function (Y) {
+  // YUI will now automatically load modules from the custom combo handler.
+});
+</script>
+```
 
 
 License
