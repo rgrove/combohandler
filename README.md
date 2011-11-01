@@ -162,7 +162,7 @@ comboServer({
 
 If you clone or download the GitHub repo, you can rename `config.sample.js` to
 `config.js`, edit it to your liking, and then simply run `app.js` to start a
-standalone server in development mode.
+standalone server in development mode on port 8000.
 
     git clone git://github.com/rgrove/combohandler.git
     cd combohandler
@@ -183,7 +183,7 @@ handler instead of the Yahoo! combo handler. Here's a working example that uses
 a live combo handler instance running on fuji.jetpants.com to serve the latest
 code from YUI's git repo:
 
-```js
+```html
 <script src="http://fuji.jetpants.com/yui/combo/yui3?build/yui/yui-min.js"></script>
 <script>
 var Y = YUI({
