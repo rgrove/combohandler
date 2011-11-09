@@ -86,7 +86,6 @@ var combo   = require('combohandler'),
     app = express.createServer();
 
 app.configure(function () {
-  app.use(express.conditionalGet());
   app.use(express.errorHandler());
 });
 
