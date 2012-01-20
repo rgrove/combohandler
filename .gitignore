@@ -2,3 +2,4 @@ logs/
 node_modules/
 pids/
 config.js
+npm-debug.log
