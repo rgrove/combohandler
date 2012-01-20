@@ -57,7 +57,7 @@ Or as route middleware for a specific route:
 
 ```js
 app.get('/foo', combo.combine({rootPath: '/local/path/to/foo'}), function (req, res) {
-  res.send(res.body, 200);
+    res.send(res.body, 200);
 });
 ```
 
@@ -91,11 +91,11 @@ app.configure(function () {
 
 // Return a 400 response if the combo handler generates a BadRequest error.
 app.error(function (err, req, res, next) {
-  if (err instanceof combo.BadRequest) {
-    res.send('Bad request.', {'Content-Type': 'text/plain'}, 400);
-  } else {
-    next();
-  }
+    if (err instanceof combo.BadRequest) {
+        res.send('Bad request.', {'Content-Type': 'text/plain'}, 400);
+    } else {
+        next();
+    }
 });
 
 // Given a root path that points to a YUI 2 root folder, this route will
@@ -104,7 +104,7 @@ app.error(function (err, req, res, next) {
 // http://example.com/yui2?build/yahoo/yahoo-min.js&build/yuiloader/yuiloader-min.js
 //
 app.get('/yui2', combo.combine({rootPath: '/local/path/to/yui2'}), function (req, res) {
-  res.send(res.body, 200);
+    res.send(res.body, 200);
 });
 
 // Given a root path that points to a YUI 3 root folder, this route will
@@ -113,7 +113,7 @@ app.get('/yui2', combo.combine({rootPath: '/local/path/to/yui2'}), function (req
 // http://example.com/yui3?build/yui/yui-min.js&build/loader/loader-min.js
 //
 app.get('/yui3', combo.combine({rootPath: '/local/path/to/yui3'}), function (req, res) {
-  res.send(res.body, 200);
+    res.send(res.body, 200);
 });
 
 app.listen(3000);
@@ -131,10 +131,10 @@ var comboServer = require('combohandler/lib/server'),
     app;
 
 app = comboServer({
-  roots: {
-    '/yui2': '/local/path/to/yui2',
-    '/yui3': '/local/path/to/yui3'
-  }
+    roots: {
+        '/yui2': '/local/path/to/yui2',
+        '/yui3': '/local/path/to/yui3'
+    }
 });
 
 app.listen(3000);
@@ -150,10 +150,10 @@ with combo handled routes:
 var comboServer = require('combohandler/lib/server');
 
 comboServer({
-  roots: {
-    '/yui2': '/local/path/to/yui2',
-    '/yui3': '/local/path/to/yui3'
-  }
+    roots: {
+        '/yui2': '/local/path/to/yui2',
+        '/yui3': '/local/path/to/yui3'
+    }
 }, myApp); // Assuming `myApp` is a pre-existing Express server instance.
 ```
 
@@ -185,12 +185,12 @@ code from YUI's git repo:
 ```html
 <script src="http://fuji.jetpants.com/yui/combo/yui3?build/yui/yui-min.js"></script>
 <script>
-var Y = YUI({
-  comboBase: 'http://fuji.jetpants.com/yui/combo/yui3?',
-  combine  : true,
-  root     : 'build/'
+YUI({
+    comboBase: 'http://fuji.jetpants.com/yui/combo/yui3?',
+    combine  : true,
+    root     : 'build/'
 }).use('node', function (Y) {
-  // YUI will now automatically load modules from the custom combo handler.
+    // YUI will now automatically load modules from the custom combo handler.
 });
 </script>
 ```
