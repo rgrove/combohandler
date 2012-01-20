@@ -66,7 +66,7 @@ describe('combohandler', function () {
             request(BASE_URL + '/js', function (err, res, body) {
                 assert.equal(err, null);
                 res.should.have.status(400);
-                body.should.equal('Bad request.');
+                body.should.equal('Bad request. No files requested.');
                 done();
             });
         });
@@ -77,7 +77,7 @@ describe('combohandler', function () {
                 assert.equal(err, null);
                 res.should.have.status(400);
                 res.should.have.header('content-type', 'text/plain; charset=utf-8');
-                body.should.equal('Bad request.');
+                body.should.equal('Bad request. File not found: bogus.js');
                 done();
             });
         });
@@ -104,7 +104,7 @@ describe('combohandler', function () {
                         assert.equal(err, null);
                         res.should.have.status(400);
                         res.should.have.header('content-type', 'text/plain; charset=utf-8');
-                        body.should.equal('Bad request.');
+                        body.should.match(/^Bad request. File not found: /);
                         done();
                     });
                 });
