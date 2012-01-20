@@ -1,6 +1,12 @@
 Combo Handler History
 =====================
 
+0.1.4 (git)
+-----------
+
+* Added support for symlinks that point to files outside the root path.
+
+
 0.1.3 (2011-10-31)
 ------------------
 
