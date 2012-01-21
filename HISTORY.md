@@ -6,6 +6,11 @@ Combo Handler History
 
 * Added support for symlinks that point to files outside the root path.
 
+* Added support for setting `Cache-Control` and `Expires` headers via the
+  `maxAge` config property. [Daniel Stockman]
+
+* Errors now provide more descriptive messages. [Daniel Stockman]
+
 
 0.1.3 (2011-10-31)
 ------------------
