@@ -1,4 +1,5 @@
-var server  = require('../lib/server'),
+var combo   = require('../'),
+    server  = require('../lib/server'),
 
     assert  = require('assert'),
     express = require('express'),
@@ -60,6 +61,61 @@ describe('combohandler', function () {
         });
     });
 
+    // -- Config Options -------------------------------------------------------
+    describe('config: maxAge', function () {
+        before(function () {
+            app.get('/max-age-null', combo.combine({
+                rootPath: __dirname + '/fixtures/root/js',
+                maxAge  : null
+            }), function (req, res) {
+                res.send(res.body, 200);
+            });
+
+            app.get('/max-age-0', combo.combine({
+                rootPath: __dirname + '/fixtures/root/js',
+                maxAge  : 0
+            }), function (req, res) {
+                res.send(res.body, 200);
+            });
+        });
+
+        it('should default to one year', function (done) {
+            request(BASE_URL + '/js?a.js', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(200);
+                res.should.have.header('cache-control', 'public,max-age=31536000');
+
+                var expires = new Date(res.headers['expires']);
+                ((expires - Date.now()) / 1000).should.be.within(31535990, 31536000);
+
+                done();
+            });
+        });
+
+        it('should not set Cache-Control and Expires headers when maxAge is null', function (done) {
+            request(BASE_URL + '/max-age-null?a.js', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(200);
+                res.headers.should.not.have.property('cache-control');
+                res.headers.should.not.have.property('expires');
+                done();
+            });
+        });
+
+        it('should support a maxAge of 0', function (done) {
+            request(BASE_URL + '/max-age-0?a.js', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(200);
+                res.should.have.header('cache-control', 'public,max-age=0');
+
+                var expires = new Date(res.headers['expires']);
+                ((expires - Date.now()) / 1000).should.be.within(-5, 5);
+
+                done();
+            });
+        });
+    });
+
     // -- Errors ---------------------------------------------------------------
     describe('errors', function () {
         it('should return a 400 Bad Request error when no files are specified', function (done) {
@@ -70,7 +126,6 @@ describe('combohandler', function () {
                 done();
             });
         });
-
 
         it('should throw a 400 Bad Request error when a file is not found', function (done) {
             request(BASE_URL + '/js?bogus.js', function (err, res, body) {

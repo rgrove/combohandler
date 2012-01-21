@@ -10,5 +10,13 @@ module.exports = {
     roots: {
         '/yui2': '/local/path/to/yui2',
         '/yui3': '/local/path/to/yui3'
-    }
+    },
+
+    // Maximum age in seconds to send in the `Cache-Control` and `Expires`
+    // response headers. Set this to `0` to cause immediate expiration, or
+    // `null` to prevent the `Cache-Control` and `Expires` headers from being
+    // set.
+    //
+    // The default value is 31536000 seconds, or 1 year.
+    maxAge: 31536000
 };
