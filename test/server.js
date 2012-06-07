@@ -137,6 +137,51 @@ describe('combohandler', function () {
             });
         });
 
+        it('should throw a 400 Bad Request error when a white-listed MIME type is not found', function (done) {
+            request(BASE_URL + '/js?foo.bar', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(400);
+                body.should.equal('Bad request. Illegal MIME type present.');
+                done();
+            });
+        });
+
+        it('should throw a 400 Bad Request error when an unmapped MIME type is found with other valid types', function (done) {
+            request(BASE_URL + '/js?a.js&foo.bar', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(400);
+                body.should.equal('Bad request. Only one MIME type allowed per request.');
+                done();
+            });
+        });
+
+        it('should throw a 400 Bad Request error when more than one valid MIME type is found', function (done) {
+            request(BASE_URL + '/js?a.js&b.css', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(400);
+                body.should.equal('Bad request. Only one MIME type allowed per request.');
+                done();
+            });
+        });
+
+        it('should throw a 400 Bad Request error when a querystring is truncated', function (done) {
+            request(BASE_URL + '/js?a.js&b', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(400);
+                body.should.equal('Bad request. Truncated query parameters.');
+                done();
+            });
+        });
+
+        it('should throw a 400 Bad Request error when a querystring is dramatically truncated', function (done) {
+            request(BASE_URL + '/js?a', function (err, res, body) {
+                assert.equal(err, null);
+                res.should.have.status(400);
+                body.should.equal('Bad request. Truncated query parameters.');
+                done();
+            });
+        });
+
         describe('path traversal', function () {
             var paths = [
                 '../../../../package.json',
