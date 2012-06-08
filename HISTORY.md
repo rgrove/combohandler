@@ -11,6 +11,11 @@ Combo Handler History
 
 * Errors now provide more descriptive messages. [Daniel Stockman]
 
+* Deny requests with non-whitelisted or differing MIME types. [Daniel Stockman]
+
+* Return a quick error on requests that are obviously truncated or otherwise
+  mangled. [Daniel Stockman]
+
 
 0.1.3 (2011-10-31)
 ------------------
