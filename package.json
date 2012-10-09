@@ -42,6 +42,6 @@
     "directories": {"lib": "./lib"},
 
     "scripts": {
-        "test": "make test"
+        "test": "./node_modules/.bin/mocha"
     }
 }
