@@ -57,7 +57,7 @@ Or as route middleware for a specific route:
 
 ```js
 app.get('/foo', combo.combine({rootPath: '/local/path/to/foo'}), function (req, res) {
-    res.send(res.body, 200);
+    res.send(res.body);
 });
 ```
 
@@ -83,28 +83,21 @@ multiple routes with different root paths:
 var combo   = require('combohandler'),
     express = require('express'),
 
-    app = express.createServer();
+    app = express();
 
 app.configure(function () {
   app.use(express.errorHandler());
 });
 
 // Return a 400 response if the combo handler generates a BadRequest error.
-app.error(function (err, req, res, next) {
+app.use(function (err, req, res, next) {
     if (err instanceof combo.BadRequest) {
-        res.send('Bad request.', {'Content-Type': 'text/plain'}, 400);
+        res.charset = 'utf-8';
+        res.type('text/plain');
+        res.send(400, 'Bad request.');
     } else {
         next();
     }
-});
-
-// Given a root path that points to a YUI 2 root folder, this route will
-// handle URLs like:
-//
-// http://example.com/yui2?build/yahoo/yahoo-min.js&build/yuiloader/yuiloader-min.js
-//
-app.get('/yui2', combo.combine({rootPath: '/local/path/to/yui2'}), function (req, res) {
-    res.send(res.body, 200);
 });
 
 // Given a root path that points to a YUI 3 root folder, this route will
@@ -113,7 +106,7 @@ app.get('/yui2', combo.combine({rootPath: '/local/path/to/yui2'}), function (req
 // http://example.com/yui3?build/yui/yui-min.js&build/loader/loader-min.js
 //
 app.get('/yui3', combo.combine({rootPath: '/local/path/to/yui3'}), function (req, res) {
-    res.send(res.body, 200);
+    res.send(res.body);
 });
 
 app.listen(3000);
@@ -122,9 +115,9 @@ app.listen(3000);
 ### Creating a server
 
 If you just want to get a server up and running quickly by specifying a mapping
-of routes to local root paths, use the `combohandler/lib/server` module. It creates
-a barebones Express server that will perform combo handling on the routes you
-specify:
+of routes to local root paths, use the `combohandler/lib/server` module. It
+creates a barebones Express server that will perform combo handling on the
+routes you specify:
 
 ```js
 var comboServer = require('combohandler/lib/server'),
@@ -132,7 +125,6 @@ var comboServer = require('combohandler/lib/server'),
 
 app = comboServer({
     roots: {
-        '/yui2': '/local/path/to/yui2',
         '/yui3': '/local/path/to/yui3'
     }
 });
@@ -151,7 +143,6 @@ var comboServer = require('combohandler/lib/server');
 
 comboServer({
     roots: {
-        '/yui2': '/local/path/to/yui2',
         '/yui3': '/local/path/to/yui3'
     }
 }, myApp); // Assuming `myApp` is a pre-existing Express server instance.
@@ -178,15 +169,13 @@ Using as a YUI 3 combo handler
 ------------------------------
 
 With a tiny bit of configuration, you can tell YUI to use your custom combo
-handler instead of the Yahoo! combo handler. Here's a working example that uses
-a live combo handler instance running on fuji.jetpants.com to serve the latest
-code from YUI's git repo:
+handler instead of the Yahoo! combo handler. Here's an example:
 
 ```html
-<script src="http://fuji.jetpants.com/yui/combo/yui3?build/yui/yui-min.js"></script>
+<script src="http://example.com/combo/yui3?build/yui/yui-min.js"></script>
 <script>
 YUI({
-    comboBase: 'http://fuji.jetpants.com/yui/combo/yui3?',
+    comboBase: 'http://example.com/combo/yui3?',
     combine  : true,
     root     : 'build/'
 }).use('node', function (Y) {

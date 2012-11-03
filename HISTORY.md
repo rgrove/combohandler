@@ -1,8 +1,12 @@
 Combo Handler History
 =====================
 
-0.1.4 (git)
------------
+0.2.0
+-----
+
+* Supports Express 3.0.
+
+* Removed support for Cluster, since it's dead.
 
 * Added support for symlinks that point to files outside the root path.
 

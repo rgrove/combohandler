@@ -11,7 +11,7 @@ var combo   = require('../'),
 process.env['NODE_ENV'] = 'test';
 
 describe('combohandler', function () {
-    var app;
+    var app, httpServer;
 
     before(function () {
         app = server({
@@ -21,11 +21,11 @@ describe('combohandler', function () {
             }
         });
 
-        app.listen(PORT);
+        httpServer = app.listen(PORT);
     });
 
     after(function () {
-        app.close();
+        httpServer.close();
     });
 
     it('should combine JavaScript', function (done) {
