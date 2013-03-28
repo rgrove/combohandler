@@ -1,0 +1,8 @@
+#no-quotes { background: url(no-quotes.png);}
+#single-quotes { background: url('single-quotes.png');}
+#double-quotes { background: url("double-quotes.png");}
+#spaces { background: url(
+  "spaces.png" );}
+#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}
+#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}
+#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}

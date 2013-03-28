@@ -1,0 +1,3 @@
+#depth { background: url(deeper.png);}
+#up-one { background: url(../shallower.png);}
+#down-one { background: url(more/down-one.png);}
