@@ -27,6 +27,12 @@ describe('combohandler', function () {
         }), function (req, res) {
           res.send(res.body);
         });
+        app.get('/rewrite-noslash', combo.combine({
+          rootPath: __dirname + '/fixtures/rewrite',
+          basePath: "/rewritten/"
+        }), function (req, res) {
+          res.send(res.body);
+        });
 
         httpServer = app.listen(PORT);
     });
@@ -221,6 +227,23 @@ describe('combohandler', function () {
 
     // -- URL Rewrites ---------------------------------------------------------
     describe("url rewrites", function () {
+        it ("should allow the basePath to end in a slash", function (done) {
+            request(BASE_URL + "/rewrite-noslash?urls.css", function (err, res, body) {
+                assert.equal(err, null);
+                body.should.equal([
+                    "#no-quotes { background: url(/rewritten/no-quotes.png);}",
+                    "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
+                    "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
+                    "#spaces { background: url(",
+                    "  \"/rewritten/spaces.png\" );}",
+                    "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
+                    "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
+                ].join("\n"));
+                done();
+            });
+        });
         it ("should not rewrite without a basePath", function (done) {
             request(BASE_URL + "/norewrite?urls.css", function (err, res, body) {
                 assert.equal(err, null);
@@ -232,7 +255,8 @@ describe('combohandler', function () {
                     "  \"spaces.png\" );}",
                     "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
                     "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}"
+                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                    "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }"
                 ].join("\n"));
                 done();
             });
@@ -249,6 +273,7 @@ describe('combohandler', function () {
                     "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
                     "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                     "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
                     "#depth { background: url(/rewritten/deeper/deeper.png);}",
                     "#up-one { background: url(/rewritten/shallower.png);}",
                     "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
@@ -257,5 +282,4 @@ describe('combohandler', function () {
             });
         });
     });
-
 });

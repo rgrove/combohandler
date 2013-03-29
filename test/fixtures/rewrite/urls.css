@@ -6,3 +6,4 @@
 #data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}
 #absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}
 #protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}
+#escaped-stuff { background:url("\)\";\'\(.png"); }
