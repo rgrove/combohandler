@@ -172,7 +172,7 @@ relative URLs in CSS files need to be updated to be relative to the
 combohandled path. Set the `basePath` configuration option to have the combo
 handler do this automatically.
 
- ``js
+```js
 // This static route can be used to load images and other assets that shouldn't
 // be combined.
 //
