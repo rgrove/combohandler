@@ -1,8 +1,17 @@
 Combo Handler History
 =====================
 
-0.2.0
------
+0.2.1 (git)
+-----------
+
+* Added a `basePath` config option that can be used to specify a
+  non-combohandled base path. Relative URLs in combohandled CSS files will
+  be automatically rewritten to be relative to this base path rather than the
+  combo URL. [Ryan Cannon]
+
+
+0.2.0 (2012-11-03)
+------------------
 
 * Supports Express 3.0.
 

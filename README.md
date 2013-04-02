@@ -165,27 +165,26 @@ To run the standalone server in production mode, set the `NODE_ENV` variable to
     NODE_ENV=production ./app.js
 
 
-### Re-writing URLs in CSS files
+### Rewriting URLs in CSS files
 
-Because combohandler changes the path from which the CSS file is loaded, you
-may need to update relative URLs in your CSS files relative to their new path.
-Combohandler can do this automatically by specifying the `basePath` option.
+Because the combo handler changes the path from which CSS files are loaded,
+relative URLs in CSS files need to be updated to be relative to the
+combohandled path. Set the `basePath` configuration option to have the combo
+handler do this automatically.
 
-```js
-// Given a a static path that points to a YUI 3 root folder, this route:
+ ``js
+// This static route can be used to load images and other assets that shouldn't
+// be combined.
 //
-// http://example.com/yui3/build/yui/yui-min.js&build/loader/loader-min.js
-//
-app.use('/yui3', express.static(__dirname + '/local/path/to/yui3'));
+app.use('/public', express.static(__dirname + '/public'));
 
-// This route will combo the above requests, and update CSS paths to correctly
-// load images from the static path above.
-// 
-// http://example.com/combo?build/yui/yui-min.js&build/loader/loader-min.js
+// This route will combine requests for files in the public directory, and will
+// also automatically rewrite relative paths in CSS files to point to the
+// non-combohandled static route defined above.
 //
 app.get('/combo', combohandler.combine({
-    rootPath: __dirname + '/local/path/to/yui3',
-    basePath: "/yui3"
+    rootPath: __dirname + '/public',
+    basePath: '/public'
 }), function (req, res) {
     res.send(res.body);
 });
