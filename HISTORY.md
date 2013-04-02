@@ -1,8 +1,8 @@
 Combo Handler History
 =====================
 
-0.2.1 (git)
------------
+0.2.1 (2013-04-01)
+------------------
 
 * Added a `basePath` config option that can be used to specify a
   non-combohandled base path. Relative URLs in combohandled CSS files will
