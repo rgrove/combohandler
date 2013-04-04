@@ -29,6 +29,7 @@
     },
 
     "devDependencies": {
+        "istanbul": "~0.1.34",
         "mocha"  : "1.6.0",
         "request": "~2.9",
         "should" : "1.2.0"
@@ -39,6 +40,6 @@
     "directories": {"lib": "./lib"},
 
     "scripts": {
-        "test": "./node_modules/.bin/mocha"
+        "test": "istanbul test ./node_modules/mocha/bin/_mocha"
     }
 }
