@@ -17,21 +17,8 @@ describe('combohandler', function () {
         app = server({
             roots: {
                 '/css': __dirname + '/fixtures/root/css',
-                '/js' : __dirname + '/fixtures/root/js',
-                '/norewrite': __dirname + '/fixtures/rewrite'
+                '/js' : __dirname + '/fixtures/root/js'
             }
-        });
-        app.get('/rewrite', combo.combine({
-          rootPath: __dirname + '/fixtures/rewrite',
-          basePath: "/rewritten"
-        }), function (req, res) {
-          res.send(res.body);
-        });
-        app.get('/rewrite-noslash', combo.combine({
-          rootPath: __dirname + '/fixtures/rewrite',
-          basePath: "/rewritten/"
-        }), function (req, res) {
-          res.send(res.body);
         });
 
         httpServer = app.listen(PORT);
@@ -81,14 +68,14 @@ describe('combohandler', function () {
                 rootPath: __dirname + '/fixtures/root/js',
                 maxAge  : null
             }), function (req, res) {
-                res.send(res.body, 200);
+                res.send(res.body);
             });
 
             app.get('/max-age-0', combo.combine({
                 rootPath: __dirname + '/fixtures/root/js',
                 maxAge  : 0
             }), function (req, res) {
-                res.send(res.body, 200);
+                res.send(res.body);
             });
         });
 
@@ -227,6 +214,28 @@ describe('combohandler', function () {
 
     // -- URL Rewrites ---------------------------------------------------------
     describe("url rewrites", function () {
+        before(function () {
+            app.get('/norewrite', combo.combine({
+                rootPath: __dirname + '/fixtures/rewrite'
+            }), function (req, res) {
+                res.send(res.body);
+            });
+
+            app.get('/rewrite', combo.combine({
+                rootPath: __dirname + '/fixtures/rewrite',
+                basePath: "/rewritten"
+            }), function (req, res) {
+                res.send(res.body);
+            });
+
+            app.get('/rewrite-noslash', combo.combine({
+                rootPath: __dirname + '/fixtures/rewrite',
+                basePath: "/rewritten/"
+            }), function (req, res) {
+                res.send(res.body);
+            });
+        });
+
         it ("should allow the basePath to end in a slash", function (done) {
             request(BASE_URL + "/rewrite-noslash?urls.css", function (err, res, body) {
                 assert.equal(err, null);
