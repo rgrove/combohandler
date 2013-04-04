@@ -3,7 +3,6 @@ var combo   = require('../'),
     server  = require('../lib/server'),
 
     assert  = require('assert'),
-    express = require('express'),
     request = require('request'),
 
     PORT     = 8942,
