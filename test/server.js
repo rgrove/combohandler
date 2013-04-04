@@ -1,3 +1,4 @@
+/*global describe, before, after, it */
 var combo   = require('../'),
     server  = require('../lib/server'),
 
@@ -236,7 +237,7 @@ describe('combohandler', function () {
             });
         });
 
-        it ("should allow the basePath to end in a slash", function (done) {
+        it("should allow the basePath to end in a slash", function (done) {
             request(BASE_URL + "/rewrite-noslash?urls.css", function (err, res, body) {
                 assert.ifError(err);
                 body.should.equal([
@@ -248,12 +249,13 @@ describe('combohandler', function () {
                     "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
                     "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                     "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
+                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }"
                 ].join("\n"));
                 done();
             });
         });
-        it ("should not rewrite without a basePath", function (done) {
+
+        it("should not rewrite without a basePath", function (done) {
             request(BASE_URL + "/norewrite?urls.css", function (err, res, body) {
                 assert.ifError(err);
                 body.should.equal([
@@ -270,7 +272,8 @@ describe('combohandler', function () {
                 done();
             });
         });
-        it ("should rewrite valid urls", function (done) {
+
+        it("should rewrite valid urls", function (done) {
             request(BASE_URL + "/rewrite?urls.css&deeper/more.css", function (err, res, body) {
                 assert.ifError(err);
                 body.should.equal([
