@@ -118,6 +118,26 @@ describe('combohandler', function () {
 
     // -- Errors ---------------------------------------------------------------
     describe('errors', function () {
+        before(function () {
+            var forceError = function (req, res, next) {
+                next(new Error('forced'));
+            };
+
+            app.get('/500?', combo.combine({
+                rootPath: __dirname + '/fixtures/root/js'
+            }), forceError, function (req, res) {
+                res.send(res.body);
+            });
+        });
+
+        it('should return a 500 when error is passed through (not a BadRequest)', function (done) {
+            request(BASE_URL + '/500?a.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(500);
+                done();
+            });
+        });
+
         it('should return a 400 Bad Request error when no files are specified', function (done) {
             request(BASE_URL + '/js', function (err, res, body) {
                 assert.ifError(err);

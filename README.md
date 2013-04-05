@@ -96,7 +96,7 @@ app.use(function (err, req, res, next) {
         res.type('text/plain');
         res.send(400, 'Bad request.');
     } else {
-        next();
+        next(err);
     }
 });
 
