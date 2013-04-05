@@ -32,7 +32,7 @@ describe('combohandler', function () {
         request(BASE_URL + '/js?a.js&b.js', function (err, res, body) {
             assert.ifError(err);
             res.should.have.status(200);
-            res.should.have.header('content-type', 'application/javascript;charset=utf-8');
+            res.should.have.header('content-type', 'application/javascript; charset=utf-8');
             res.should.have.header('last-modified');
             body.should.equal('a();\n\nb();\n');
             done();
@@ -43,7 +43,7 @@ describe('combohandler', function () {
         request(BASE_URL + '/css?a.css&b.css', function (err, res, body) {
             assert.ifError(err);
             res.should.have.status(200);
-            res.should.have.header('content-type', 'text/css;charset=utf-8');
+            res.should.have.header('content-type', 'text/css; charset=utf-8');
             res.should.have.header('last-modified');
             body.should.equal('.a { color: green; }\n\n.b { color: green; }\n');
             done();
@@ -54,7 +54,7 @@ describe('combohandler', function () {
         request(BASE_URL + '/js?a.js&b.js&outside.js', function (err, res, body) {
             assert.ifError(err);
             res.should.have.status(200);
-            res.should.have.header('content-type', 'application/javascript;charset=utf-8');
+            res.should.have.header('content-type', 'application/javascript; charset=utf-8');
             res.should.have.header('last-modified');
             body.should.equal('a();\n\nb();\n\noutside();\n');
             done();
