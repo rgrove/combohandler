@@ -67,16 +67,12 @@ describe('combohandler', function () {
             app.get('/max-age-null', combo.combine({
                 rootPath: __dirname + '/fixtures/root/js',
                 maxAge  : null
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
 
             app.get('/max-age-0', combo.combine({
                 rootPath: __dirname + '/fixtures/root/js',
                 maxAge  : 0
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
         });
 
         it('should default to one year', function (done) {
@@ -125,9 +121,7 @@ describe('combohandler', function () {
 
             app.get('/500?', combo.combine({
                 rootPath: __dirname + '/fixtures/root/js'
-            }), forceError, function (req, res) {
-                res.send(res.body);
-            });
+            }), forceError, combo.respond);
         });
 
         it('should return a 500 when error is passed through (not a BadRequest)', function (done) {
@@ -237,23 +231,17 @@ describe('combohandler', function () {
         before(function () {
             app.get('/norewrite', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite'
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
 
             app.get('/rewrite', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite',
                 basePath: "/rewritten"
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
 
             app.get('/rewrite-noslash', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite',
                 basePath: "/rewritten/"
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
         });
 
         it("should allow the basePath to end in a slash", function (done) {
