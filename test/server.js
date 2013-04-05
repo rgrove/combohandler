@@ -115,17 +115,31 @@ describe('combohandler', function () {
     // -- Errors ---------------------------------------------------------------
     describe('errors', function () {
         before(function () {
-            var forceError = function (req, res, next) {
-                next(new Error('forced'));
-            };
-
-            app.get('/500?', combo.combine({
+            app.get('/error-next?', function (req, res, next) {
+                var poo = new Error('poo');
+                poo.stack = null; // silence irrelevant output
+                next(poo);
+            }, combo.combine({
                 rootPath: __dirname + '/fixtures/root/js'
-            }), forceError, combo.respond);
+            }), combo.respond);
+
+            app.get('/error-throw?', combo.combine({
+                rootPath: __dirname + '/fixtures/root/js'
+            }), function (req, res, next) {
+                throw 'poo';
+            }, combo.respond);
         });
 
-        it('should return a 500 when error is passed through (not a BadRequest)', function (done) {
-            request(BASE_URL + '/500?a.js', function (err, res, body) {
+        it('should return a 500 when error before middleware', function (done) {
+            request(BASE_URL + '/error-next?a.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(500);
+                done();
+            });
+        });
+
+        it('should return a 500 when error after middleware', function (done) {
+            request(BASE_URL + '/error-throw?a.js', function (err, res, body) {
                 assert.ifError(err);
                 res.should.have.status(500);
                 done();
