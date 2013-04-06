@@ -130,6 +130,13 @@ describe('combohandler', function () {
             }, combo.respond);
         });
 
+        it('should inherit from Error', function () {
+            var err = new combo.BadRequest('test');
+            err.should.be.an.instanceOf(Error);
+            err.name.should.equal('BadRequest');
+            err.message.should.equal('test');
+        });
+
         it('should return a 500 when error before middleware', function (done) {
             request(BASE_URL + '/error-next?a.js', function (err, res, body) {
                 assert.ifError(err);
