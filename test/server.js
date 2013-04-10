@@ -321,5 +321,51 @@ describe('combohandler', function () {
                 done();
             });
         });
+
+        describe("as middleware", function () {
+            before(function () {
+                app.get('/rewrite-middleware-ignore',
+                    combo.combine({ rootPath: __dirname + '/fixtures/root/js' }),
+                    combo.cssUrls({ basePath: "/rewritten/" }),
+                combo.respond);
+
+                app.get('/rewrite-middleware',
+                    combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+                    combo.cssUrls({ basePath: "/rewritten/" }),
+                combo.respond);
+            });
+
+            it("should avoid modifying non-CSS requests", function (done) {
+                request(BASE_URL + '/rewrite-middleware-ignore?a.js&b.js', function (err, res, body) {
+                    assert.ifError(err);
+                    res.should.have.status(200);
+                    res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                    res.should.have.header('last-modified');
+                    body.should.equal('a();\n\nb();\n');
+                    done();
+                });
+            });
+
+            it("should rewrite valid urls", function (done) {
+                request(BASE_URL + "/rewrite-middleware?urls.css&deeper/more.css", function (err, res, body) {
+                    assert.ifError(err);
+                    body.should.equal([
+                        "#no-quotes { background: url(/rewritten/no-quotes.png);}",
+                        "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
+                        "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
+                        "#spaces { background: url(",
+                        "  \"/rewritten/spaces.png\" );}",
+                        "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
+                        "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                        "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                        "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
+                        "#depth { background: url(/rewritten/deeper/deeper.png);}",
+                        "#up-one { background: url(/rewritten/shallower.png);}",
+                        "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
+                    ].join("\n"));
+                    done();
+                });
+            });
+        });
     });
 });

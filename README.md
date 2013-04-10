@@ -196,6 +196,24 @@ app.get('/combo', combo.combine({
 }), combo.respond);
 ```
 
+Alternatively, you can use the built-in `cssUrls` middleware as a separate
+route callback. `cssUrls` must always be placed after the default `combine`
+middleware when used in this fashion.
+
+```js
+// This route provides the same behaviour as the previous example, providing
+// better separation of concerns and the possibility of inserting custom
+// middleware between the built-in steps.
+app.get('/combo',
+    combo.combine({
+        rootPath: __dirname + '/public'
+    }),
+    combo.cssUrls({
+        basePath: '/public'
+    }),
+    combo.respond);
+```
+
 Using as a YUI 3 combo handler
 ------------------------------
 
