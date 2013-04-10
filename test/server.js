@@ -32,7 +32,7 @@ describe('combohandler', function () {
         request(BASE_URL + '/js?a.js&b.js', function (err, res, body) {
             assert.ifError(err);
             res.should.have.status(200);
-            res.should.have.header('content-type', 'application/javascript;charset=utf-8');
+            res.should.have.header('content-type', 'application/javascript; charset=utf-8');
             res.should.have.header('last-modified');
             body.should.equal('a();\n\nb();\n');
             done();
@@ -43,7 +43,7 @@ describe('combohandler', function () {
         request(BASE_URL + '/css?a.css&b.css', function (err, res, body) {
             assert.ifError(err);
             res.should.have.status(200);
-            res.should.have.header('content-type', 'text/css;charset=utf-8');
+            res.should.have.header('content-type', 'text/css; charset=utf-8');
             res.should.have.header('last-modified');
             body.should.equal('.a { color: green; }\n\n.b { color: green; }\n');
             done();
@@ -54,7 +54,7 @@ describe('combohandler', function () {
         request(BASE_URL + '/js?a.js&b.js&outside.js', function (err, res, body) {
             assert.ifError(err);
             res.should.have.status(200);
-            res.should.have.header('content-type', 'application/javascript;charset=utf-8');
+            res.should.have.header('content-type', 'application/javascript; charset=utf-8');
             res.should.have.header('last-modified');
             body.should.equal('a();\n\nb();\n\noutside();\n');
             done();
@@ -67,16 +67,12 @@ describe('combohandler', function () {
             app.get('/max-age-null', combo.combine({
                 rootPath: __dirname + '/fixtures/root/js',
                 maxAge  : null
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
 
             app.get('/max-age-0', combo.combine({
                 rootPath: __dirname + '/fixtures/root/js',
                 maxAge  : 0
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
         });
 
         it('should default to one year', function (done) {
@@ -118,6 +114,45 @@ describe('combohandler', function () {
 
     // -- Errors ---------------------------------------------------------------
     describe('errors', function () {
+        before(function () {
+            app.get('/error-next?', function (req, res, next) {
+                var poo = new Error('poo');
+                poo.stack = null; // silence irrelevant output
+                next(poo);
+            }, combo.combine({
+                rootPath: __dirname + '/fixtures/root/js'
+            }), combo.respond);
+
+            app.get('/error-throw?', combo.combine({
+                rootPath: __dirname + '/fixtures/root/js'
+            }), function (req, res, next) {
+                throw 'poo';
+            }, combo.respond);
+        });
+
+        it('should inherit from Error', function () {
+            var err = new combo.BadRequest('test');
+            err.should.be.an.instanceOf(Error);
+            err.name.should.equal('BadRequest');
+            err.message.should.equal('test');
+        });
+
+        it('should return a 500 when error before middleware', function (done) {
+            request(BASE_URL + '/error-next?a.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(500);
+                done();
+            });
+        });
+
+        it('should return a 500 when error after middleware', function (done) {
+            request(BASE_URL + '/error-throw?a.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(500);
+                done();
+            });
+        });
+
         it('should return a 400 Bad Request error when no files are specified', function (done) {
             request(BASE_URL + '/js', function (err, res, body) {
                 assert.ifError(err);
@@ -217,23 +252,17 @@ describe('combohandler', function () {
         before(function () {
             app.get('/norewrite', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite'
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
 
             app.get('/rewrite', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite',
                 basePath: "/rewritten"
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
 
             app.get('/rewrite-noslash', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite',
                 basePath: "/rewritten/"
-            }), function (req, res) {
-                res.send(res.body);
-            });
+            }), combo.respond);
         });
 
         it("should allow the basePath to end in a slash", function (done) {

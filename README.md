@@ -56,9 +56,7 @@ app.use(combo.combine({rootPath: '/local/path/to/files'}));
 Or as route middleware for a specific route:
 
 ```js
-app.get('/foo', combo.combine({rootPath: '/local/path/to/foo'}), function (req, res) {
-    res.send(res.body);
-});
+app.get('/foo', combo.combine({rootPath: '/local/path/to/foo'}), combo.respond);
 ```
 
 In either case, the middleware will perform combo handling for files under the
@@ -96,7 +94,7 @@ app.use(function (err, req, res, next) {
         res.type('text/plain');
         res.send(400, 'Bad request.');
     } else {
-        next();
+        next(err);
     }
 });
 
@@ -105,12 +103,22 @@ app.use(function (err, req, res, next) {
 //
 // http://example.com/yui3?build/yui/yui-min.js&build/loader/loader-min.js
 //
-app.get('/yui3', combo.combine({rootPath: '/local/path/to/yui3'}), function (req, res) {
-    res.send(res.body);
-});
+app.get('/yui3', combo.combine({rootPath: '/local/path/to/yui3'}), combo.respond);
 
 app.listen(3000);
 ```
+
+#### `combo.respond`
+
+The `respond` method exported by `require('combohandler')` is a convenience method intended to be the last callback passed to an [express route](http://expressjs.com/api.html#app.VERB). Unless you have a *very* good reason to avoid it, you should probably use it. Here is the equivalent callback:
+
+```js
+function respond(req, res) {
+    res.send(res.body);
+}
+```
+
+This method may be extended in the future to do fancy things with optional combohandler middleware.
 
 ### Creating a server
 
@@ -182,12 +190,10 @@ app.use('/public', express.static(__dirname + '/public'));
 // also automatically rewrite relative paths in CSS files to point to the
 // non-combohandled static route defined above.
 //
-app.get('/combo', combohandler.combine({
+app.get('/combo', combo.combine({
     rootPath: __dirname + '/public',
     basePath: '/public'
-}), function (req, res) {
-    res.send(res.body);
-});
+}), combo.respond);
 ```
 
 Using as a YUI 3 combo handler
