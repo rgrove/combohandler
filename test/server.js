@@ -277,7 +277,10 @@ describe('combohandler', function () {
                     "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
                     "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                     "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }"
+                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
+                    ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
+                    ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
+                    ""
                 ].join("\n"));
                 done();
             });
@@ -295,7 +298,10 @@ describe('combohandler', function () {
                     "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
                     "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                     "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }"
+                    "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
+                    ".unicode-raw { background: url(déchaîné.png); }",
+                    ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
+                    ""
                 ].join("\n"));
                 done();
             });
@@ -314,6 +320,11 @@ describe('combohandler', function () {
                     "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                     "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                     "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
+                    ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
+                    // NOTE: we do not currently support the space terminator for CSS escapes.
+                    // ".unicode-escaped { background: url(/rewritten/d\\E9 cha\\EEn\\E9.png); }",
+                    ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
+                    "",
                     "#depth { background: url(/rewritten/deeper/deeper.png);}",
                     "#up-one { background: url(/rewritten/shallower.png);}",
                     "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
@@ -359,6 +370,9 @@ describe('combohandler', function () {
                         "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                         "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
                         "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
+                        ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
+                        ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
+                        "",
                         "#depth { background: url(/rewritten/deeper/deeper.png);}",
                         "#up-one { background: url(/rewritten/shallower.png);}",
                         "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"

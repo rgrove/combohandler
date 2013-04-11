@@ -7,3 +7,5 @@
 #absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}
 #protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}
 #escaped-stuff { background:url("\)\";\'\(.png"); }
+.unicode-raw { background: url(déchaîné.png); }
+.unicode-escaped { background: url(d\0000E9cha\EEn\E9.png); }
