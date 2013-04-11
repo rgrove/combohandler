@@ -280,6 +280,9 @@ describe('combohandler', function () {
                     "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
                     ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
                     ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
+                    ".nl-craziness { background:",
+                    "    url(/rewritten/crazy.png",
+                    "    ); }",
                     ""
                 ].join("\n"));
                 done();
@@ -301,6 +304,9 @@ describe('combohandler', function () {
                     "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
                     ".unicode-raw { background: url(déchaîné.png); }",
                     ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
+                    ".nl-craziness { background:",
+                    "    url(crazy.png",
+                    "    ); }",
                     ""
                 ].join("\n"));
                 done();
@@ -324,6 +330,9 @@ describe('combohandler', function () {
                     // NOTE: we do not currently support the space terminator for CSS escapes.
                     // ".unicode-escaped { background: url(/rewritten/d\\E9 cha\\EEn\\E9.png); }",
                     ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
+                    ".nl-craziness { background:",
+                    "    url(/rewritten/crazy.png",
+                    "    ); }",
                     "",
                     "#depth { background: url(/rewritten/deeper/deeper.png);}",
                     "#up-one { background: url(/rewritten/shallower.png);}",
@@ -372,6 +381,9 @@ describe('combohandler', function () {
                         "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
                         ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
                         ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
+                        ".nl-craziness { background:",
+                        "    url(/rewritten/crazy.png",
+                        "    ); }",
                         "",
                         "#depth { background: url(/rewritten/deeper/deeper.png);}",
                         "#up-one { background: url(/rewritten/shallower.png);}",

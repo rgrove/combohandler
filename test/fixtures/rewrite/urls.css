@@ -9,3 +9,6 @@
 #escaped-stuff { background:url("\)\";\'\(.png"); }
 .unicode-raw { background: url(déchaîné.png); }
 .unicode-escaped { background: url(d\0000E9cha\EEn\E9.png); }
+.nl-craziness { background:
+    url(crazy.png
+    ); }
