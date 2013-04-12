@@ -353,6 +353,11 @@ describe('combohandler', function () {
                     combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
                     combo.cssUrls({ basePath: "/rewritten/" }),
                 combo.respond);
+
+                app.get('/rewrite-middleware-imports',
+                    combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+                    combo.cssUrls({ basePath: "/rewritten/", imports: true }),
+                combo.respond);
             });
 
             it("should avoid modifying non-CSS requests", function (done) {
@@ -388,6 +393,51 @@ describe('combohandler', function () {
                         "#depth { background: url(/rewritten/deeper/deeper.png);}",
                         "#up-one { background: url(/rewritten/shallower.png);}",
                         "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
+                    ].join("\n"));
+                    done();
+                });
+            });
+
+            it("should NOT rewrite import paths when disabled", function (done) {
+                request(BASE_URL + "/rewrite-middleware?imports.css", function (err, res, body) {
+                    assert.ifError(err);
+                    body.should.equal([
+                        "@import 'basic-sq.css';",
+                        "@import \"basic-dq.css\";",
+                        "@import url(url-uq.css);",
+                        "@import url('url-sq.css');",
+                        "@import url(\"url-dq.css\");",
+                        "@import \"media-simple.css\" print;",
+                        "@import url(\"media-simple-url.css\") print;",
+                        "@import 'media-simple-comma.css' print, screen;",
+                        "@import \"media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
+                        "@import url(\"media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
+                        "@import \"../rewrite/deeper/more.css\";",
+                        "@import \"../root/css/a.css\" (device-width: 320px);",
+                        ""
+                    ].join("\n"));
+                    done();
+                });
+            });
+
+            it("should rewrite import paths when enabled", function (done) {
+                request(BASE_URL + "/rewrite-middleware-imports?imports.css", function (err, res, body) {
+                    assert.ifError(err);
+                    body.should.equal([
+                        "@import '/rewritten/basic-sq.css';",
+                        "@import \"/rewritten/basic-dq.css\";",
+                        "@import url(/rewritten/url-uq.css);",
+                        "@import url('/rewritten/url-sq.css');",
+                        "@import url(\"/rewritten/url-dq.css\");",
+                        "@import \"/rewritten/media-simple.css\" print;",
+                        "@import url(\"/rewritten/media-simple-url.css\") print;",
+                        "@import '/rewritten/media-simple-comma.css' print, screen;",
+                        "@import \"/rewritten/media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
+                        "@import url(\"/rewritten/media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
+                        // TODO: are the following rewritten correctly?
+                        "@import \"/rewrite/deeper/more.css\";",
+                        "@import \"/root/css/a.css\" (device-width: 320px);",
+                        ""
                     ].join("\n"));
                     done();
                 });
