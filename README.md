@@ -217,14 +217,21 @@ app.get('/combo',
 Finally, the `cssUrls` middleware has the ability (disabled by default) to
 rewrite `@import` paths in the same manner as `url()` values. As `@import` is
 considered an anti-pattern in production code, this functionality is strictly
-opt-in and requires using `cssUrls` as a separate route callback. Import path
-rewriting is enabled by passing `true` as the `imports` property in the
+opt-in and requires passing `true` as the `rewriteImports` property in the
 middleware options object.
 
 ```js
+// Automagically
+app.get('/combo', combo.combine({
+    rootPath: __dirname + '/public',
+    basePath: '/public',
+    rewriteImports: true
+}), combo.respond);
+
+// As explicit middleware
 app.get('/combo',
     combo.combine({ rootPath: __dirname + '/public' }),
-    combo.cssUrls({ basePath: '/public', imports: true }),
+    combo.cssUrls({ basePath: '/public', rewriteImports: true }),
     combo.respond);
 ```
 

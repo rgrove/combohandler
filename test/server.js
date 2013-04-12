@@ -263,6 +263,12 @@ describe('combohandler', function () {
                 rootPath: __dirname + '/fixtures/rewrite',
                 basePath: "/rewritten/"
             }), combo.respond);
+
+            app.get('/rewrite-imports', combo.combine({
+                rootPath: __dirname + '/fixtures/rewrite',
+                basePath: "/rewritten/",
+                rewriteImports: true
+            }), combo.respond);
         });
 
         it("should allow the basePath to end in a slash", function (done) {
@@ -342,6 +348,29 @@ describe('combohandler', function () {
             });
         });
 
+        it("should rewrite import paths when enabled from combine", function (done) {
+            request(BASE_URL + "/rewrite-imports?imports.css", function (err, res, body) {
+                assert.ifError(err);
+                body.should.equal([
+                    "@import '/rewritten/basic-sq.css';",
+                    "@import \"/rewritten/basic-dq.css\";",
+                    "@import url(/rewritten/url-uq.css);",
+                    "@import url('/rewritten/url-sq.css');",
+                    "@import url(\"/rewritten/url-dq.css\");",
+                    "@import \"/rewritten/media-simple.css\" print;",
+                    "@import url(\"/rewritten/media-simple-url.css\") print;",
+                    "@import '/rewritten/media-simple-comma.css' print, screen;",
+                    "@import \"/rewritten/media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
+                    "@import url(\"/rewritten/media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
+                    // TODO: are the following rewritten correctly?
+                    "@import \"/rewrite/deeper/more.css\";",
+                    "@import \"/root/css/a.css\" (device-width: 320px);",
+                    ""
+                ].join("\n"));
+                done();
+            });
+        });
+
         describe("as middleware", function () {
             before(function () {
                 app.get('/rewrite-middleware-ignore',
@@ -356,7 +385,7 @@ describe('combohandler', function () {
 
                 app.get('/rewrite-middleware-imports',
                     combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
-                    combo.cssUrls({ basePath: "/rewritten/", imports: true }),
+                    combo.cssUrls({ basePath: "/rewritten/", rewriteImports: true }),
                 combo.respond);
             });
 
