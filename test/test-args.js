@@ -1,4 +1,4 @@
-/*global describe, it */
+/*global describe, before, after, it */
 var path = require('path');
 var args = require('../lib/args');
 
@@ -75,6 +75,76 @@ describe("args", function () {
 
             config2.port.should.equal(1234);
             config1.should.equal(config2);
+        });
+    });
+
+    describe("workerDefaults", function () {
+        it("should include port", function () {
+            args.workerDefaults.should.have.property('port');
+            args.workerDefaults.port.should.equal(3000);
+        });
+
+        it("should include server", function () {
+            args.workerDefaults.should.have.property('server');
+            args.workerDefaults.server.should.equal(path.resolve(path.join(__dirname, '../lib/server')));
+        });
+    });
+
+    describe("masterDefaults", function () {
+        it("should include port and server mixed from workerDefaults", function () {
+            args.masterDefaults.should.have.property('port');
+            args.workerDefaults.port.should.equal(args.workerDefaults.port);
+
+            args.masterDefaults.should.have.property('server');
+            args.workerDefaults.server.should.equal(args.workerDefaults.server);
+        });
+
+        it("should include pids", function () {
+            args.masterDefaults.should.have.property('pids');
+            args.masterDefaults.pids.should.equal(args.defaultPidsDir());
+        });
+
+        it("should include timeout", function () {
+            args.masterDefaults.should.have.property('timeout');
+            args.masterDefaults.timeout.should.equal(5000);
+        });
+
+        it("should include workers", function () {
+            args.masterDefaults.should.have.property('workers');
+            args.masterDefaults.workers.should.equal(args.defaultWorkers());
+        });
+
+        describe("defaultPidsDir()", function () {
+            var _npmConfigPrefix,
+                invertedPrefix;
+
+            before(function () {
+                _npmConfigPrefix = process.env.npm_config_prefix;
+
+                // invert the conditional already tested above
+                invertedPrefix = process.env.npm_config_prefix = _npmConfigPrefix
+                    ? ""
+                    : "/usr/local/share/npm";
+            });
+
+            after(function () {
+                // restore modified env var
+                process.env.npm_config_prefix = _npmConfigPrefix;
+            });
+
+            it("should derive path from alternate method", function () {
+                var pidsDir = args.defaultPidsDir();
+                var prefixDir = invertedPrefix || path.resolve(path.dirname(process.execPath), '..');
+
+                pidsDir.should.equal(path.join(prefixDir, 'var/run'));
+            });
+        });
+
+        describe("defaultWorkers()", function () {
+            it("should not exceed MAX_WORKERS", function () {
+                var workers = args.defaultWorkers();
+                workers.should.be.below(args.MAX_WORKERS);
+            });
         });
     });
 
