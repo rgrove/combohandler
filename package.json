@@ -24,6 +24,7 @@
     ],
 
     "dependencies": {
+        "mkdirp" : "*",
         "nopt"   : "2.x",
         "express": "3.1.1",
         "URIjs"  : "1.10.1"
