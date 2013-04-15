@@ -92,7 +92,7 @@ app.use(function (err, req, res, next) {
     if (err instanceof combo.BadRequest) {
         res.charset = 'utf-8';
         res.type('text/plain');
-        res.send(400, 'Bad request.');
+        res.send(400, 'Bad request. ' + err.message);
     } else {
         next(err);
     }
