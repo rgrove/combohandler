@@ -473,4 +473,107 @@ describe('combohandler', function () {
             });
         });
     });
+
+    // Dynamic Paths ----------------------------------------------------------
+    describe("dynamic paths", function () {
+        before(function () {
+            app.get('/dynamic/:version',
+                combo.combine({ rootPath: __dirname + '/fixtures/dynamic/:version' }),
+            combo.respond);
+
+            app.get('/:version/param-first',
+                combo.combine({ rootPath: __dirname + '/fixtures/dynamic/:version' }),
+            combo.respond);
+
+            app.get('/dynamic/:version/empty-combo',
+                combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/:version/static' }),
+                combo.combine(),
+            combo.respond);
+
+            app.get('/dynamic/:version/doubled',
+                combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/:version/static' }),
+                combo.combine({     rootPath: __dirname + '/fixtures/dynamic/:version/static' }),
+            combo.respond);
+
+            app.get('/non-dynamic',
+                combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
+                combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
+            combo.respond);
+        });
+
+        it("should work when param found at end of path", function (done) {
+            request(BASE_URL + '/dynamic/decafbad?a.js&b.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('a();\n\nb();\n');
+                done();
+            });
+        });
+
+        it("should work when param found at beginning of path", function (done) {
+            request(BASE_URL + '/decafbad/param-first?a.js&static/c.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('a();\n\nc();\n');
+                done();
+            });
+        });
+
+        it("should work when rootPath not passed to combine()", function (done) {
+            request(BASE_URL + '/dynamic/decafbad/empty-combo?c.js&d.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('c();\n\nd();\n');
+                done();
+            });
+        });
+
+        it("should work when param found before end of path", function (done) {
+            request(BASE_URL + '/dynamic/decafbad/empty-combo?c.js&d.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('c();\n\nd();\n');
+                done();
+            });
+        });
+
+        it("should work when middleware is run twice on same route", function (done) {
+            request(BASE_URL + '/dynamic/decafbad/doubled?c.js&d.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('c();\n\nd();\n');
+                done();
+            });
+        });
+
+        it("should not fail when param not present", function (done) {
+            request(BASE_URL + '/non-dynamic?a.js&b.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('a();\n\nb();\n');
+                done();
+            });
+        });
+
+        it("should error when param does not correspond to existing path", function (done) {
+            request(BASE_URL + '/dynamic/deadbeef?a.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(400);
+                body.should.equal('Bad request. Unable to resolve path: /dynamic/deadbeef');
+                done();
+            });
+        });
+    });
 });
