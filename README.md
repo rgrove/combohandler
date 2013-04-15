@@ -235,6 +235,24 @@ app.get('/combo',
     combo.respond);
 ```
 
+### Dynamic Paths via Route Parameters
+
+To enable resolution of dynamic subtree paths under a given `rootPath`, simply add a [route parameter](http://expressjs.com/api.html#req.params) to both the route and the `rootPath` config.
+
+```js
+app.get('/combo/yui/:version', combo.combine({
+    rootPath: '/local/path/to/yui/:version/build'
+}), combo.respond);
+```
+
+Given this config, any [YUI release tarball](http://yuilibrary.com/download/yui3/) you explode into a versioned subdirectory of `/local/path/to/yui/` would be available under a much shorter URL than the default config provides:
+
+    http://example.com/combo/yui/3.9.1?yui/yui-min.js&yui-throttle/yui-throttle-min.js
+    // vs
+    http://example.com/combo/yui?3.9.1/build/yui/yui-min.js&3.9.1/build/yui-throttle/yui-throttle-min.js
+
+If the built-in `dynamicPath` middleware is used manually, it _must_ be inserted *before* the default `combine` middleware.
+
 Using as a YUI 3 combo handler
 ------------------------------
 
