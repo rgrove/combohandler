@@ -566,5 +566,14 @@ describe('combohandler', function () {
                 done();
             });
         });
+
+        it("should error when param does not correspond to existing path", function (done) {
+            request(BASE_URL + '/dynamic/deadbeef?a.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(400);
+                body.should.equal('Bad request. Unable to resolve path: /dynamic/deadbeef');
+                done();
+            });
+        });
     });
 });
