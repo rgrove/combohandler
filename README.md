@@ -1,6 +1,8 @@
 Combo Handler
 =============
 
+[![Build Status](https://travis-ci.org/rgrove/combohandler.png?branch=master)](https://travis-ci.org/rgrove/combohandler)
+
 This is a simple combo handler for Node.js, usable either as [Connect][]
 middleware or as an [Express][] server. It works just like the combo handler
 service on the Yahoo! CDN, which you'll be familiar with if you've used YUI.
