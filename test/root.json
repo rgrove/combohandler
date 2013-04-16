@@ -1,0 +1,4 @@
+{
+    "/css": "./fixtures/root/css",
+    "/js" : "./fixtures/root/js"
+}

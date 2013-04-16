@@ -45,20 +45,51 @@ describe("args", function () {
     describe("clean()", function () {
         it("should clean options in-place", function () {
             var config = {
-                rootsFile: 'foo/bar.json'
+                server: 'foo/bar.js'
             };
 
             args.clean(config);
 
-            config.rootsFile.should.equal(path.resolve('foo/bar.json'));
+            config.server.should.equal(path.resolve('foo/bar.js'));
         });
 
         it("should return clean options object", function () {
-            var config1 = { port: '1234' },
-                config2 = args.clean(config1);
+            var config = { port: '1234' },
+                cleaned = args.clean(config);
 
-            config2.port.should.equal(1234);
-            config1.should.equal(config2);
+            cleaned.port.should.equal(1234);
+            config.should.equal(cleaned);
+        });
+    });
+
+    describe("resolveRoots()", function () {
+        it("should resolve route paths from dirname of rootsFile", function () {
+            var config = args.clean({
+                rootsFile: 'test/root.json'
+            });
+
+            config.should.have.property('roots');
+
+            // route
+            config.roots.should.have.property('/css');
+            config.roots.should.have.property('/js');
+
+            // rootPath
+            config.roots['/css'].should.equal(path.resolve('test/fixtures/root/css'));
+            config.roots['/js' ].should.equal(path.resolve('test/fixtures/root/js' ));
+        });
+
+        it("should just ignore rootsFile when it is a directory", function () {
+            var config = args.clean({ rootsFile: __dirname });
+
+            config.should.not.have.property('roots');
+        });
+
+        it("should throw error when rootsFile does not exist", function () {
+            /*jshint immed:false */
+            (function () {
+                args.clean({ rootsFile: 'test/missing.json' });
+            }).should.throwError(/^ENOENT/);
         });
     });
 
