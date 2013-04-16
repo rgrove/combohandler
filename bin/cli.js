@@ -1,13 +1,30 @@
 #!/usr/bin/env node
 
 var options = require('../lib/args').parse();
+var instance;
 
 if (options.cluster) {
-    // Cluster constructor calls #listen() if no other action
-    require('../lib/cluster')(options);
+    // Cluster support
+    instance = require('../lib/cluster')(options);
+
+    if (options.restart) {
+        instance.restart();
+    }
+    else if (options.shutdown) {
+        instance.shutdown();
+    }
+    else if (options.status) {
+        instance.status();
+    }
+    else if (options.stop) {
+        instance.stop();
+    }
+    else {
+        instance.listen();
+    }
 } else {
     // Legacy support
-    var instance = require('../lib/server')(options);
+    instance = require('../lib/server')(options);
     var port = options.port || require('../lib/defaults').master.port;
 
     if (!options.quiet) {
@@ -22,8 +39,8 @@ if (options.cluster) {
 //
 //  Terminal:
 //      ./bin/cli.js -f ./test/root.json
-//      ./bin/cli.js --cluster -f ./test/root.json
+//      ./bin/cli.js -f ./test/root.json --cluster
 //
 //  Browser:
-//      localhost:8000/test?js/a.js&js/b.js
-//      localhost:8000/test?css/a.css&css/b.css
+//      localhost:8000/js?a.js&b.js
+//      localhost:8000/css?a.css&b.css
