@@ -11,5 +11,5 @@ comboCluster(args.parse());
 //      ./bin/cli.js -f ./test/root.json
 //
 //  Browser:
-//      localhost:3000/test?js/a.js&js/b.js
-//      localhost:3000/test?css/a.css&css/b.css
+//      localhost:8000/test?js/a.js&js/b.js
+//      localhost:8000/test?css/a.css&css/b.css
