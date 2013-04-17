@@ -36,11 +36,45 @@ describe("cluster master", function () {
     });
 
     describe("on 'destroy'", function () {
-        it("should detach events, passing through callback");
-        it("should not error when detachEvents callback missing");
+        it("should detach events, passing through callback", function (done) {
+            var instance = new ComboMaster();
+
+            instance._bindProcess();
+            hasAttachedSignalEvents();
+
+            instance.destroy(function () {
+                hasDetachedSignalEvents();
+
+                done();
+            });
+        });
+
+        it("should not error when detachEvents callback missing", function () {
+            var instance = new ComboMaster();
+
+            instance._bindProcess();
+            hasAttachedSignalEvents();
+
+            instance.destroy();
+            hasDetachedSignalEvents();
+        });
     });
 
     describe("on 'listen'", function () {
         it("should fork workers");
     });
+
+    // Test Utilities ---------------------------------------------------------
+
+    function hasAttachedSignalEvents() {
+        process.listeners('SIGINT' ).should.have.length(1);
+        process.listeners('SIGTERM').should.have.length(1);
+        process.listeners('SIGUSR2').should.have.length(1);
+    }
+
+    function hasDetachedSignalEvents() {
+        process.listeners('SIGINT' ).should.be.empty;
+        process.listeners('SIGTERM').should.be.empty;
+        process.listeners('SIGUSR2').should.be.empty;
+    }
 });
