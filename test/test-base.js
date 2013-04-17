@@ -62,6 +62,24 @@ describe("cluster base", function () {
             instance._destroyed.should.equal(true);
         });
 
+        it("should remove all instance listeners", function () {
+            var instance = new ComboBase();
+
+            instance.on('start', function () {});
+            instance.on('listen', function () {});
+            instance.on('destroy', function () {});
+
+            instance.listeners('start').should.not.be.empty;
+            instance.listeners('listen').should.not.be.empty;
+            instance.listeners('destroy').should.not.be.empty;
+
+            instance.destroy();
+
+            instance.listeners('start').should.be.empty;
+            instance.listeners('listen').should.be.empty;
+            instance.listeners('destroy').should.be.empty;
+        });
+
         it("should call destroy callback directly when no listener for 'destroy' event", function (done) {
             var instance = new ComboBase();
 
