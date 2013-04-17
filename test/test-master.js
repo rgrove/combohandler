@@ -25,12 +25,14 @@ describe("cluster master", function () {
 
             instance.should.be.an.instanceOf(ComboBase);
         });
-    });
 
-    describe("on 'start'", function () {
-        it("should setupMaster");
-        it("should create master.pid");
-        it("should attach events");
+        it("should call constructor callback if passed after config", function (done) {
+            var instance = new ComboMaster({}, done);
+        });
+
+        it("should detect constructor callback if passed instead of config", function (done) {
+            var instance = new ComboMaster(done);
+        });
     });
 
     describe("on 'destroy'", function () {
