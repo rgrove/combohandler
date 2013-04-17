@@ -37,6 +37,14 @@ describe("cluster base", function () {
             instance.should.equal(instance.start());
         });
 
+        it("should pass callback to 'start' event", function (done) {
+            var instance = new ComboBase();
+
+            instance.on('start', done);
+
+            instance.start();
+        });
+
         it("should call provided callback", function (done) {
             var instance = new ComboBase();
 
@@ -72,11 +80,9 @@ describe("cluster base", function () {
             instance.options.port.should.equal(1);
         });
 
-        it("should call #start() with callback", function (done) {
+        it("should emit 'listen' from #start() callback", function (done) {
             var instance = new ComboBase();
 
-            // override _listen() to signal completion
-            // instance._listen = done;
             instance.on('listen', done);
 
             instance.listen();
