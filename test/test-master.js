@@ -1,4 +1,7 @@
-/*global describe, before, after, it */
+/*global describe, before, after, beforeEach, afterEach, it */
+var fs = require('fs');
+var path = require('path');
+var rimraf = require('rimraf');
 
 var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
@@ -60,6 +63,46 @@ describe("cluster master", function () {
         });
     });
 
+    describe("on 'start'", function () {
+        var master;
+
+        before(cleanPidsDir);
+
+        beforeEach(function (done) {
+            master = new ComboMaster({
+                pids: 'test/fixtures/pids'
+            }, done);
+        });
+
+        afterEach(function (done) {
+            master.destroy(done);
+            master = null;
+        });
+
+        after(cleanPidsDir);
+
+        it("should setupMaster with exec config", function (done) {
+            master.setupMaster = function (options) {
+                options.should.have.property('exec');
+                options.exec.should.equal(path.resolve(__dirname, '../lib/cluster/worker.js'));
+            };
+            master.emit('start', done);
+        });
+
+        it("should create master.pid", function (done) {
+            master.emit('start', function () {
+                fs.readFile(path.join(master.options.pids, 'master.pid'), done);
+            });
+        });
+
+        it("should attach signal events", function (done) {
+            master.emit('start', function () {
+                hasAttachedSignalEvents();
+                done();
+            });
+        });
+    });
+
     describe("on 'listen'", function () {
         it("should fork workers");
     });
@@ -76,5 +119,9 @@ describe("cluster master", function () {
         process.listeners('SIGINT' ).should.be.empty;
         process.listeners('SIGTERM').should.be.empty;
         process.listeners('SIGUSR2').should.be.empty;
+    }
+
+    function cleanPidsDir() {
+        rimraf.sync('test/fixtures/pids');
     }
 });
