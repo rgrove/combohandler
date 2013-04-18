@@ -7,6 +7,10 @@ var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
 
 describe("cluster master", function () {
+    var PIDS_DIR = 'test/fixtures/pids';
+
+    after(cleanPidsDir);
+
     describe("instantiation", function () {
         it("should support empty options arg with correct defaults", function () {
             var instance = new ComboMaster();
@@ -70,7 +74,7 @@ describe("cluster master", function () {
 
         beforeEach(function (done) {
             master = new ComboMaster({
-                pids: 'test/fixtures/pids'
+                pids: PIDS_DIR
             }, done);
         });
 
@@ -104,7 +108,72 @@ describe("cluster master", function () {
     });
 
     describe("on 'listen'", function () {
-        it("should fork workers");
+        after(cleanPidsDir);
+
+        it("should fork workers", function (done) {
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+
+            instance.on('listen', function () {
+                instance.destroy(done);
+            });
+
+            instance.listen();
+        });
+    });
+
+    describe("signal methods", function () {
+        // afterEach(cleanPidsDir);
+        // this causes a worker test to fail inexplicably
+
+        it("#status() should log master state", function (done) {
+            this.timeout(100);
+
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+
+            instance.emit('start', function () {
+                instance.status();
+                setTimeout(done, 10);
+            });
+        });
+
+        it("#restart() should send SIGUSR2", function (done) {
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+
+            instance._signalMaster = function (signal) {
+                signal.should.equal('SIGUSR2');
+                done();
+            };
+
+            instance.emit('start', function () {
+                instance.restart();
+            });
+        });
+
+        it("#shutdown() should send SIGTERM", function (done) {
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+
+            instance._signalMaster = function (signal) {
+                signal.should.equal('SIGTERM');
+                done();
+            };
+
+            instance.emit('start', function () {
+                instance.shutdown();
+            });
+        });
+
+        it("#stop() should send SIGKILL", function (done) {
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+
+            instance._signalMaster = function (signal) {
+                signal.should.equal('SIGKILL');
+                done();
+            };
+
+            instance.emit('start', function () {
+                instance.stop();
+            });
+        });
     });
 
     // Test Utilities ---------------------------------------------------------
@@ -122,6 +191,6 @@ describe("cluster master", function () {
     }
 
     function cleanPidsDir() {
-        rimraf.sync('test/fixtures/pids');
+        rimraf.sync(PIDS_DIR);
     }
 });
