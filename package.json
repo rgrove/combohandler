@@ -35,7 +35,7 @@
         "mocha"  : "1.9.0",
         "request": "~2.9",
         "rimraf": "~2.1.4",
-        "should" : "1.2.0"
+        "should" : "1.2.x"
     },
 
     "main": "index.js",
