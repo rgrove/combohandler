@@ -80,7 +80,6 @@ describe("cluster master", function () {
 
         afterEach(function (done) {
             master.destroy(done);
-            master = null;
         });
 
         after(cleanPidsDir);
@@ -122,8 +121,7 @@ describe("cluster master", function () {
     });
 
     describe("signal methods", function () {
-        // afterEach(cleanPidsDir);
-        // this causes a worker test to fail inexplicably
+        afterEach(cleanPidsDir);
 
         it("#status() should log master state", function (done) {
             this.timeout(100);
@@ -190,7 +188,7 @@ describe("cluster master", function () {
         process.listeners('SIGUSR2').should.be.empty;
     }
 
-    function cleanPidsDir() {
-        rimraf.sync(PIDS_DIR);
+    function cleanPidsDir(done) {
+        rimraf(PIDS_DIR, done);
     }
 });
