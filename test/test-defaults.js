@@ -72,7 +72,7 @@ describe("defaults", function () {
     describe("defaultWorkers()", function () {
         it("should not exceed MAX_WORKERS", function () {
             var workers = defaults.defaultWorkers();
-            workers.should.be.below(defaults.MAX_WORKERS);
+            workers.should.be.within(1, defaults.MAX_WORKERS);
         });
     });
 
