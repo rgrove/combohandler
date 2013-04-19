@@ -106,20 +106,6 @@ describe("cluster master", function () {
         });
     });
 
-    describe("on 'listen'", function () {
-        after(cleanPidsDir);
-
-        it("should fork workers", function (done) {
-            var instance = new ComboMaster({ pids: PIDS_DIR });
-
-            instance.on('listen', function () {
-                instance.destroy(done);
-            });
-
-            instance.listen();
-        });
-    });
-
     describe("signal methods", function () {
         afterEach(cleanPidsDir);
 
@@ -129,6 +115,7 @@ describe("cluster master", function () {
             var instance = new ComboMaster({ pids: PIDS_DIR });
 
             instance.emit('start', function () {
+                instance._detachEvents();
                 instance.status();
                 setTimeout(done, 10);
             });
@@ -143,6 +130,7 @@ describe("cluster master", function () {
             };
 
             instance.emit('start', function () {
+                instance._detachEvents();
                 instance.restart();
             });
         });
@@ -156,6 +144,7 @@ describe("cluster master", function () {
             };
 
             instance.emit('start', function () {
+                instance._detachEvents();
                 instance.shutdown();
             });
         });
@@ -169,8 +158,27 @@ describe("cluster master", function () {
             };
 
             instance.emit('start', function () {
+                instance._detachEvents();
                 instance.stop();
             });
+        });
+    });
+
+    describe("on 'listen'", function () {
+        // disconnect called from #destroy() cleans the pids
+
+        it("should fork workers", function (done) {
+            this.timeout(0);
+
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+
+            instance.on('listen', function () {
+                setTimeout(function () {
+                    instance.destroy(done);
+                }, 10);
+            });
+
+            instance.listen();
         });
     });
 
