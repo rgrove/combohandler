@@ -44,6 +44,11 @@
 
     "directories": {"lib": "./lib"},
 
+    "config": {
+        "port": "8000",
+        "server": "./lib/server"
+    },
+
     "scripts": {
         "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha",
         "posttest": "istanbul check-coverage --statements 80 --functions 80 --branches 70 --lines 80"
