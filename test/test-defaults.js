@@ -17,12 +17,12 @@ describe("defaults", function () {
     });
 
     describe("for master", function () {
-        it("should include port and server mixed from worker defaults", function () {
+        it("should include port and server identical to worker defaults", function () {
             defaults.master.should.have.property('port');
-            defaults.worker.port.should.equal(defaults.worker.port);
+            defaults.master.port.should.equal(defaults.worker.port);
 
             defaults.master.should.have.property('server');
-            defaults.worker.server.should.equal(defaults.worker.server);
+            defaults.master.server.should.equal(defaults.worker.server);
         });
 
         it("should include pids", function () {
