@@ -45,6 +45,7 @@
     "directories": {"lib": "./lib"},
 
     "scripts": {
-        "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha"
+        "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha",
+        "posttest": "istanbul check-coverage --statements 80 --functions 80 --branches 70 --lines 80"
     }
 }
