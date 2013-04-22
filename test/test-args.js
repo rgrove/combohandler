@@ -93,4 +93,12 @@ describe("args", function () {
         });
     });
 
+    describe("version()", function () {
+        it("should read package.json for correct value", function () {
+            var pkgVersion = require('../package.json').version;
+            var gotVersion = args.version;
+
+            gotVersion.should.equal(pkgVersion);
+        });
+    });
 });

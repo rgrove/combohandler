@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 
-var options = require('../lib/args').parse();
+var args = require('../lib/args');
+var options = args.parse();
 var instance;
+
+if (options.version) {
+    console.log('v' + args.version);
+    process.exit(0);
+}
 
 if (options.cluster) {
     // Cluster support
