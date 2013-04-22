@@ -309,6 +309,13 @@ Cluster Options:
   -S, --stop        Stop server abruptly, not waiting for open connections.
 ```
 
+The `--port` and `--server` options may also be set via npm package config settings:
+
+    npm -g config set combohandler:port 2702
+    npm -g config set combohandler:server /path/to/server.js
+
+Unlike the `--server` option, a path specified in this manner *must* be absolute.
+
 Using as a YUI 3 combo handler
 ------------------------------
 
