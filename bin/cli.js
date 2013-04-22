@@ -38,6 +38,7 @@ if (options.cluster) {
 
     if (!options.quiet) {
         console.log("combohandler: Listening on http://localhost:%d/", port);
+        console.log("Press Ctrl+C to exit.");
     }
 
     instance.listen(port);
