@@ -93,6 +93,14 @@ describe("args", function () {
         });
     });
 
+    describe("usage()", function () {
+        it("should output string joined with newlines", function () {
+            var usage = args.usage;
+            usage.should.not.be.empty;
+            usage.split('\n').length.should.be.above(5);
+        });
+    });
+
     describe("version()", function () {
         it("should read package.json for correct value", function () {
             var pkgVersion = require('../package.json').version;

@@ -7,6 +7,9 @@ var instance;
 if (options.version) {
     console.log('v' + args.version);
     process.exit(0);
+} else if (options.help) {
+    console.error(args.usage);
+    process.exit(0);
 }
 
 if (options.cluster) {
