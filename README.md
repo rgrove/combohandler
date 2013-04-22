@@ -255,6 +255,60 @@ Given this config, any [YUI release tarball](http://yuilibrary.com/download/yui3
 
 If the built-in `dynamicPath` middleware is used manually, it _must_ be inserted *before* the default `combine` middleware.
 
+
+### From the command line
+
+If installed globally, the CLI executable `combohandler` is provided. To start the default single-process server, it's as simple as
+
+```bash
+combohandler
+# combohandler now running until you hit Ctrl+C
+```
+
+Of course, the default output leaves something to be desired: that is to say, any output.
+
+#### CLI Configuration
+
+At the very least, you need to provide some route-to-rootPath mappings for your CLI combohandler.
+
+When passed in the `--rootsFile` option, the JSON file contents should follow this pattern:
+
+```json
+{
+    "roots": {
+        "/yui3": "/local/path/to/yui3"
+    }
+}
+```
+
+#### CLI Usage
+
+```txt
+Usage: combohandler [options]
+
+General Options:
+  -h, --help        Output this text
+  -v, --version     Prints combohandler's version
+
+Combine Options:
+  -p, --port        Port to listen on.                                    [8000]
+  -a, --server      Script that exports an Express app [combohandler/lib/server]
+  -f, --rootsFile   Path to JSON routes config.
+  -b, --basePath    Path to prepend when rewriting relative url()s.         ['']
+  -m, --maxAge      Cache header value, in seconds.                   [31536000]
+
+Cluster Options:
+  --cluster         Enable clustering of server across multiple processes.
+  -d, --pids        Directory where pidfiles are stored.       [$PREFIX/var/run]
+  -n, --workers     Number of worker processes.          [os.cpus.length, max 8]
+  -t, --timeout     Timeout (in ms) for process startup/shutdown.         [5000]
+
+  -r, --restart     Restart a running master's worker processes.
+  -g, --shutdown    Shutdown gracefully, waiting for connections to close.
+  -s, --status      Logs status of master and workers.
+  -S, --stop        Stop server abruptly, not waiting for open connections.
+```
+
 Using as a YUI 3 combo handler
 ------------------------------
 
