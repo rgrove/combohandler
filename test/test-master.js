@@ -170,7 +170,10 @@ describe("cluster master", function () {
         it("should fork workers", function (done) {
             this.timeout(0);
 
-            var instance = new ComboMaster({ pids: PIDS_DIR });
+            var instance = new ComboMaster({
+                workers: 1,
+                pids: PIDS_DIR
+            });
 
             instance.on('listen', function () {
                 setTimeout(function () {
