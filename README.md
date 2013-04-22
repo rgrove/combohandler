@@ -295,7 +295,9 @@ Combine Options:
   -a, --server      Script that exports an Express app [combohandler/lib/server]
   -f, --rootsFile   Path to JSON routes config.
   -b, --basePath    Path to prepend when rewriting relative url()s.         ['']
-  -m, --maxAge      Cache header value, in seconds.                   [31536000]
+  -m, --maxAge      'Cache-Control' and 'Expires' value, in seconds.  [31536000]
+                    Set this to `0` to expire immediately, `null` to omit these
+                    headers entirely.
 
 Cluster Options:
   --cluster         Enable clustering of server across multiple processes.
