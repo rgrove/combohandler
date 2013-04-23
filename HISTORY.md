@@ -1,6 +1,31 @@
 Combo Handler History
 =====================
 
+0.3.0 (2013-04-22)
+------------------
+
+* Removed `app.js` and `config.sample.js`. They served us well.
+
+* Changed Travis script to also run code coverage, which is also now checked
+  against reasonable threshholds.
+
+* Changed default `lib/server` to consume all available config for each route
+  in addition to the `rootPath`.
+
+* Added CLI executable `combohandler` to replace the old `app.js`, among many,
+  many other things.
+
+* Added new multi-process implementation built on top of `node` v0.8.x+ core
+  `cluster` module.
+
+* Added oodles and oodles of tests.
+
+* Added `mkdirp`, `nopt`, and `rimraf` dependencies.
+
+* Updated `request` and `should` dependency versions.
+
+* Updated package.json config with defaults for `port` and `server` options.
+
 0.2.2 (2013-04-21)
 ------------------
 
