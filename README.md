@@ -237,6 +237,29 @@ The `--port` and `--server` options may also be set via npm package config setti
 
 Unlike the `--server` option, a path specified in this manner *must* be absolute.
 
+### Clustered!
+
+With the advent of `node` v0.8.x, the core `cluster` module is now usable, and `combohandler` now regains the capability it once had. Huzzah! said the villagers.
+
+To run a clustered combohandler from the CLI, just add the `--cluster` flag:
+
+```bash
+combohandler --cluster --root /yui3:/path/to/yui3
+```
+
+To clusterize combohandler from a module dependency, `combohandler/lib/cluster` is your friend:
+
+```js
+var comboCluster = require('combohandler/lib/cluster');
+var app = comboCluster({
+    pids: '/path/to/piddir',
+    server: './myserver.js',
+    roots: {
+        '/yui3': '/local/path/to/yui3'
+    }
+});
+app.listen(2702);
+```
 
 Optional Middleware
 -------------------
