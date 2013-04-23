@@ -305,10 +305,10 @@ Cluster Options:
   -n, --workers     Number of worker processes.          [os.cpus.length, max 8]
   -t, --timeout     Timeout (in ms) for process startup/shutdown.         [5000]
 
-  -r, --restart     Restart a running master's worker processes.
-  -g, --shutdown    Shutdown gracefully, waiting for connections to close.
-  -s, --status      Logs status of master and workers.
-  -S, --stop        Stop server abruptly, not waiting for open connections.
+  --restart         Restart a running master's worker processes.       (SIGUSR2)
+  --shutdown        Shutdown gracefully, allows connections to close.  (SIGTERM)
+  --status          Logs status of master and workers.
+  --stop            Stop server abruptly, not waiting for connections. (SIGKILL)
 ```
 
 The `--port` and `--server` options may also be set via npm package config settings:
