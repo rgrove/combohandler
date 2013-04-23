@@ -281,6 +281,12 @@ When passed in the `--rootsFile` option, the JSON file contents should follow th
 }
 ```
 
+When passed as individual `--root` parameters, the equivalent to the JSON above looks like this:
+
+```txt
+combohandler --root /yui3:/local/path/to/yui3 [...]
+```
+
 #### CLI Usage
 
 ```txt
@@ -293,7 +299,9 @@ General Options:
 Combine Options:
   -p, --port        Port to listen on.                                    [8000]
   -a, --server      Script that exports an Express app [combohandler/lib/server]
-  -f, --rootsFile   Path to JSON routes config.
+  -r, --root        String matching the pattern '{route}:{rootPath}'.
+                        You may pass any number of unique --root configs.
+  -f, --rootsFile   Path to JSON routes config, *exclusive* of --root.
   -b, --basePath    Path to prepend when rewriting relative url()s.         ['']
   -m, --maxAge      'Cache-Control' and 'Expires' value, in seconds.  [31536000]
                     Set this to `0` to expire immediately, `null` to omit these

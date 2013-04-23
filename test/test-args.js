@@ -91,6 +91,41 @@ describe("args", function () {
                 args.clean({ rootsFile: 'test/missing.json' });
             }).should.throwError(/^ENOENT/);
         });
+
+        it("should process --root options, if present", function () {
+            var config = args.clean({
+                root: [
+                    "/css:test/fixtures/root/css",
+                    "/js:test/fixtures/root/js"
+                ]
+            });
+
+            config.should.have.property('roots');
+
+            config.roots.should.eql({
+                "/css": path.resolve('test/fixtures/root/css'),
+                "/js" : path.resolve('test/fixtures/root/js' )
+            });
+        });
+
+        it("should process --root options with route parameters correctly", function () {
+            var config = args.clean({
+                root: [
+                    "/:begin/combo:test/fixtures/dynamic/:begin/static",
+                    // TODO: actually support multiple dynamic route parameters
+                    "/:holy/:moly/combo:test/fixtures/dynamic/:holy/:moly/static",
+                    "/combo/:ending:test/fixtures/dynamic/:ending"
+                ]
+            });
+
+            config.should.have.property('roots');
+
+            config.roots.should.eql({
+                "/:begin/combo": path.resolve('test/fixtures/dynamic/:begin/static'),
+                "/:holy/:moly/combo": path.resolve('test/fixtures/dynamic/:holy/:moly/static'),
+                "/combo/:ending": path.resolve('test/fixtures/dynamic/:ending')
+            });
+        });
     });
 
     describe("usage()", function () {
