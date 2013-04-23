@@ -158,22 +158,88 @@ comboServer({
 }, myApp); // Assuming `myApp` is a pre-existing Express server instance.
 ```
 
-### Running the included standalone server
+### From the command line
 
-If you clone or download the GitHub repo, you can rename `config.sample.js` to
-`config.js`, edit it to your liking, and then simply run `app.js` to start a
-standalone server in development mode on port 8000.
+If installed globally via `npm -g install`, the CLI executable `combohandler` is provided.
+If you're operating from a local clone, `npm link` in the repository root and you're off to the races.
+To start the default single-process server, it's as simple as
 
-    git clone git://github.com/rgrove/combohandler.git
-    cd combohandler
-    mv config.sample.js config.js
-    ./app.js
+```bash
+combohandler
+# combohandler now running until you hit Ctrl+C
+```
+
+Of course, the default output leaves something to be desired: that is to say, any output.
+
+#### Root Configuration
+
+At the very least, you need to provide some route-to-rootPath mappings for your CLI combohandler.
+
+When passed in the `--rootsFile` option, the JSON file contents should follow this pattern:
+
+```json
+{
+    "roots": {
+        "/yui3": "/local/path/to/yui3"
+    }
+}
+```
+
+When passed as individual `--root` parameters, the equivalent to the JSON above looks like this:
+
+```bash
+combohandler --root /yui3:/local/path/to/yui3 [...]
+```
 
 To run the standalone server in production mode, set the `NODE_ENV` variable to
 `production` before running it:
 
-    NODE_ENV=production ./app.js
+```bash
+    NODE_ENV=production combohandler --root /yui3:/path/to/yui3
+```
 
+#### CLI Usage
+
+```txt
+Usage: combohandler [options]
+
+General Options:
+  -h, --help        Output this text
+  -v, --version     Prints combohandler's version
+
+Combine Options:
+  -p, --port        Port to listen on.                                    [8000]
+  -a, --server      Script that exports an Express app [combohandler/lib/server]
+  -r, --root        String matching the pattern '{route}:{rootPath}'.
+                        You may pass any number of unique --root configs.
+  -f, --rootsFile   Path to JSON routes config, *exclusive* of --root.
+  -b, --basePath    Path to prepend when rewriting relative url()s.         ['']
+  -m, --maxAge      'Cache-Control' and 'Expires' value, in seconds.  [31536000]
+                    Set this to `0` to expire immediately, `null` to omit these
+                    headers entirely.
+
+Cluster Options:
+  --cluster         Enable clustering of server across multiple processes.
+  -d, --pids        Directory where pidfiles are stored.       [$PREFIX/var/run]
+  -n, --workers     Number of worker processes.          [os.cpus.length, max 8]
+  -t, --timeout     Timeout (in ms) for process startup/shutdown.         [5000]
+
+  --restart         Restart a running master's worker processes.       (SIGUSR2)
+  --shutdown        Shutdown gracefully, allows connections to close.  (SIGTERM)
+  --status          Logs status of master and workers.
+  --stop            Stop server abruptly, not waiting for connections. (SIGKILL)
+```
+
+The `--port` and `--server` options may also be set via npm package config settings:
+
+    npm -g config set combohandler:port 2702
+    npm -g config set combohandler:server /path/to/server.js
+
+Unlike the `--server` option, a path specified in this manner *must* be absolute.
+
+
+Optional Middleware
+-------------------
 
 ### Rewriting URLs in CSS files
 
@@ -255,76 +321,6 @@ Given this config, any [YUI release tarball](http://yuilibrary.com/download/yui3
 
 If the built-in `dynamicPath` middleware is used manually, it _must_ be inserted *before* the default `combine` middleware.
 
-
-### From the command line
-
-If installed globally, the CLI executable `combohandler` is provided. To start the default single-process server, it's as simple as
-
-```bash
-combohandler
-# combohandler now running until you hit Ctrl+C
-```
-
-Of course, the default output leaves something to be desired: that is to say, any output.
-
-#### CLI Configuration
-
-At the very least, you need to provide some route-to-rootPath mappings for your CLI combohandler.
-
-When passed in the `--rootsFile` option, the JSON file contents should follow this pattern:
-
-```json
-{
-    "roots": {
-        "/yui3": "/local/path/to/yui3"
-    }
-}
-```
-
-When passed as individual `--root` parameters, the equivalent to the JSON above looks like this:
-
-```txt
-combohandler --root /yui3:/local/path/to/yui3 [...]
-```
-
-#### CLI Usage
-
-```txt
-Usage: combohandler [options]
-
-General Options:
-  -h, --help        Output this text
-  -v, --version     Prints combohandler's version
-
-Combine Options:
-  -p, --port        Port to listen on.                                    [8000]
-  -a, --server      Script that exports an Express app [combohandler/lib/server]
-  -r, --root        String matching the pattern '{route}:{rootPath}'.
-                        You may pass any number of unique --root configs.
-  -f, --rootsFile   Path to JSON routes config, *exclusive* of --root.
-  -b, --basePath    Path to prepend when rewriting relative url()s.         ['']
-  -m, --maxAge      'Cache-Control' and 'Expires' value, in seconds.  [31536000]
-                    Set this to `0` to expire immediately, `null` to omit these
-                    headers entirely.
-
-Cluster Options:
-  --cluster         Enable clustering of server across multiple processes.
-  -d, --pids        Directory where pidfiles are stored.       [$PREFIX/var/run]
-  -n, --workers     Number of worker processes.          [os.cpus.length, max 8]
-  -t, --timeout     Timeout (in ms) for process startup/shutdown.         [5000]
-
-  --restart         Restart a running master's worker processes.       (SIGUSR2)
-  --shutdown        Shutdown gracefully, allows connections to close.  (SIGTERM)
-  --status          Logs status of master and workers.
-  --stop            Stop server abruptly, not waiting for connections. (SIGKILL)
-```
-
-The `--port` and `--server` options may also be set via npm package config settings:
-
-    npm -g config set combohandler:port 2702
-    npm -g config set combohandler:server /path/to/server.js
-
-Unlike the `--server` option, a path specified in this manner *must* be absolute.
 
 Using as a YUI 3 combo handler
 ------------------------------
