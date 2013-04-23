@@ -24,6 +24,8 @@
     ],
 
     "dependencies": {
+        "mkdirp" : "0.3.x",
+        "nopt"   : "2.x",
         "express": "3.2.x",
         "URIjs"  : "1.10.1"
     },
@@ -31,15 +33,24 @@
     "devDependencies": {
         "istanbul": "~0.1.34",
         "mocha"  : "1.9.0",
-        "request": "~2.9",
-        "should" : "1.2.0"
+        "request": "2.x",
+        "rimraf": "~2.1.4",
+        "should" : "1.2.x"
     },
 
     "main": "index.js",
 
+    "bin": "./bin/cli.js",
+
     "directories": {"lib": "./lib"},
 
+    "config": {
+        "port": "8000",
+        "server": "./lib/server"
+    },
+
     "scripts": {
-        "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha"
+        "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha",
+        "posttest": "istanbul check-coverage --statements 80 --functions 80 --branches 70 --lines 80"
     }
 }
