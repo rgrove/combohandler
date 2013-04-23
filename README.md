@@ -26,11 +26,15 @@ Installation
 
 Install using npm:
 
-    npm install combohandler
+```bash
+npm install combohandler
+```
 
 Or just clone the [GitHub repo](https://github.com/rgrove/combohandler):
 
-    git clone git://github.com/rgrove/combohandler.git
+```bash
+git clone git://github.com/rgrove/combohandler.git
+```
 
 
 Usage
@@ -65,13 +69,17 @@ In either case, the middleware will perform combo handling for files under the
 specified local `rootPath` when requested using a URL with one or more file paths
 in the query string:
 
-    http://example.com/<route>?<path>[&path][...]
+```text
+http://example.com/<route>?<path>[&path][...]
+```
 
 For example:
 
-    http://example.com/foo?file1.js
-    http://example.com/foo?file1.js&file2.js
-    http://example.com/foo?file1.js&file2.js&subdir/file3.js
+```text
+http://example.com/foo?file1.js
+http://example.com/foo?file1.js&file2.js
+http://example.com/foo?file1.js&file2.js&subdir/file3.js
+```
 
 Attempts to traverse above the `rootPath` or to request a file that doesn't
 exist will result in a `BadRequest` error being bubbled up.
@@ -200,7 +208,7 @@ To run the standalone server in production mode, set the `NODE_ENV` variable to
 
 #### CLI Usage
 
-```txt
+```text
 Usage: combohandler [options]
 
 General Options:
@@ -232,8 +240,10 @@ Cluster Options:
 
 The `--port` and `--server` options may also be set via npm package config settings:
 
-    npm -g config set combohandler:port 2702
-    npm -g config set combohandler:server /path/to/server.js
+```bash
+npm -g config set combohandler:port 2702
+npm -g config set combohandler:server /path/to/server.js
+```
 
 Unlike the `--server` option, a path specified in this manner *must* be absolute.
 
@@ -338,9 +348,11 @@ app.get('/combo/yui/:version', combo.combine({
 
 Given this config, any [YUI release tarball](http://yuilibrary.com/download/yui3/) you explode into a versioned subdirectory of `/local/path/to/yui/` would be available under a much shorter URL than the default config provides:
 
+```text
     http://example.com/combo/yui/3.9.1?yui/yui-min.js&yui-throttle/yui-throttle-min.js
     // vs
     http://example.com/combo/yui?3.9.1/build/yui/yui-min.js&3.9.1/build/yui-throttle/yui-throttle-min.js
+```
 
 If the built-in `dynamicPath` middleware is used manually, it _must_ be inserted *before* the default `combine` middleware.
 
