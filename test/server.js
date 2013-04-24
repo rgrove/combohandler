@@ -387,6 +387,16 @@ describe('combohandler', function () {
                     combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
                     combo.cssUrls({ basePath: "/rewritten/", rewriteImports: true }),
                 combo.respond);
+
+                app.get('/rewrite-middleware-before-combine',
+                    combo.cssUrls({ basePath: "/rewritten/" }),
+                    combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+                combo.respond);
+
+                app.get('/rewrite-middleware-noconfig',
+                    combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+                    combo.cssUrls(),
+                combo.respond);
             });
 
             it("should avoid modifying non-CSS requests", function (done) {
@@ -396,6 +406,54 @@ describe('combohandler', function () {
                     res.should.have.header('content-type', 'application/javascript; charset=utf-8');
                     res.should.have.header('last-modified');
                     body.should.equal('a();\n\nb();\n');
+                    done();
+                });
+            });
+
+            it("should not rewrite when before combine()", function (done) {
+                request(BASE_URL + "/rewrite-middleware-before-combine?urls.css", function (err, res, body) {
+                    assert.ifError(err);
+                    body.should.equal([
+                        "#no-quotes { background: url(no-quotes.png);}",
+                        "#single-quotes { background: url(\'single-quotes.png\');}",
+                        "#double-quotes { background: url(\"double-quotes.png\");}",
+                        "#spaces { background: url(",
+                        "  \"spaces.png\" );}",
+                        "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
+                        "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                        "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                        "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
+                        ".unicode-raw { background: url(déchaîné.png); }",
+                        ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
+                        ".nl-craziness { background:",
+                        "    url(crazy.png",
+                        "    ); }",
+                        ""
+                    ].join("\n"));
+                    done();
+                });
+            });
+
+            it("should not rewrite without a basePath", function (done) {
+                request(BASE_URL + "/rewrite-middleware-noconfig?urls.css", function (err, res, body) {
+                    assert.ifError(err);
+                    body.should.equal([
+                        "#no-quotes { background: url(no-quotes.png);}",
+                        "#single-quotes { background: url(\'single-quotes.png\');}",
+                        "#double-quotes { background: url(\"double-quotes.png\");}",
+                        "#spaces { background: url(",
+                        "  \"spaces.png\" );}",
+                        "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
+                        "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                        "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+                        "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
+                        ".unicode-raw { background: url(déchaîné.png); }",
+                        ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
+                        ".nl-craziness { background:",
+                        "    url(crazy.png",
+                        "    ); }",
+                        ""
+                    ].join("\n"));
                     done();
                 });
             });
@@ -500,6 +558,11 @@ describe('combohandler', function () {
                 combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
             combo.respond);
 
+            app.get('/no-config',
+                combo.dynamicPath(),
+                combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
+            combo.respond);
+
             app.get('/route-only/:version/lib',
                 combo.combine({ rootPath: __dirname + '/fixtures/root' }),
             combo.respond);
@@ -562,6 +625,17 @@ describe('combohandler', function () {
 
         it("should not fail when param not present", function (done) {
             request(BASE_URL + '/non-dynamic?a.js&b.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('a();\n\nb();\n');
+                done();
+            });
+        });
+
+        it("should not fail when config missing", function (done) {
+            request(BASE_URL + '/no-config?a.js&b.js', function (err, res, body) {
                 assert.ifError(err);
                 res.should.have.status(200);
                 res.should.have.header('content-type', 'application/javascript; charset=utf-8');
