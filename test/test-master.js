@@ -40,6 +40,18 @@ describe("cluster master", function () {
         it("should detect constructor callback if passed instead of config", function (done) {
             var instance = new ComboMaster(done);
         });
+
+        it("should setup instance properties", function () {
+            var instance = new ComboMaster();
+
+            instance.should.have.property('startupTimeout');
+            instance.should.have.property('closingTimeout');
+            instance.should.have.property('flameouts');
+
+            instance.startupTimeout.should.eql([]);
+            instance.closingTimeout.should.eql([]);
+            instance.flameouts.should.equal(0);
+        });
     });
 
     describe("on 'destroy'", function () {
