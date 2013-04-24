@@ -2,6 +2,7 @@
 var fs = require('fs');
 var path = require('path');
 var rimraf = require('rimraf');
+var mkdirp = require('mkdirp');
 
 var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
@@ -185,6 +186,112 @@ describe("cluster master", function () {
                 instance.stop();
             });
         });
+    });
+
+    describe("handling cluster events", function () {
+        // ensure pids dir exists, no master pids created in these tests
+        before(function (done) {
+            mkdirp(PIDS_DIR, done);
+        });
+        after(cleanPidsDir);
+
+        var mockWorkerIds = 0;
+        function MockWorker() {
+            var id = mockWorkerIds++;
+            this.id = id;
+            this.process = {
+                pid: 1e6 + id
+            };
+        }
+        MockWorker.prototype.send = function (payload) {
+            this._sent = payload;
+        };
+        MockWorker.prototype.destroy = function () {
+            this._destroyed = true;
+        };
+
+        it("should set startupTimeout when worker forked", function () {
+            var instance = new ComboMaster({ timeout: 10 });
+            var worker = new MockWorker();
+
+            instance.startupTimeout.should.be.empty;
+            instance._workerForked(worker);
+            instance.startupTimeout.should.have.length(1);
+        });
+
+        it("should clear startupTimeout when worker online");
+
+        it("should send 'listen' command when worker online", function () {
+            var instance = new ComboMaster();
+            var worker = new MockWorker();
+
+            instance._workerOnline(worker);
+
+            worker._sent.should.eql({
+                cmd: 'listen',
+                data: instance.options
+            });
+        });
+
+        it("should write worker pidfile after worker listening", function () {
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+            var worker = new MockWorker();
+
+            instance._workerListening(worker);
+
+            worker.process.should.have.property('title', 'combohandler worker');
+
+            fs.existsSync(path.join(instance.options.pids, 'worker' + worker.id + '.pid'));
+        });
+
+        it("should set closingTimeout when worker disconnected", function () {
+            var instance = new ComboMaster({ timeout: 10 });
+            var worker = new MockWorker();
+
+            instance.closingTimeout.should.be.empty;
+            instance._workerDisconnected(worker);
+            // timeouts aren't pushed onto the stack, they are assigned at the id's index
+            instance.closingTimeout.should.have.length(worker.id + 1);
+        });
+
+        it("should destroy() worker when closingTimeout expires", function (done) {
+            this.timeout(100);
+
+            var instance = new ComboMaster({ timeout: 10 });
+            var worker = new MockWorker();
+
+            instance._workerDisconnected(worker);
+
+            setTimeout(function () {
+                worker.should.have.property('_destroyed', true);
+                done();
+            }, 25);
+        });
+
+        it("should clear startupTimeout when worker exited");
+
+        it("should clear closingTimeout when worker exited");
+
+        it("should not fork a new worker when worker suicides");
+
+        it("should remove worker pidfile when worker suicides", function () {
+            this.timeout(100);
+
+            var instance = new ComboMaster({ pids: PIDS_DIR });
+            var worker = new MockWorker();
+
+            instance._workerListening(worker);
+
+            worker.suicide = true;
+
+            instance._workerExited(worker);
+
+            fs.readdirSync(instance.options.pids).should.not.include('worker' + worker.id + '.pid');
+        });
+
+        it("should remove worker pidfile when worker is reloaded");
+
+        it("should exit when flameouts threshhold exceeded");
     });
 
     describe("on 'listen'", function () {
