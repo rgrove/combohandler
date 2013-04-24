@@ -1,6 +1,18 @@
 Combo Handler History
 =====================
 
+0.3.1 (2013-04-24)
+------------------
+
+* Fixed cluster worker configuration via events rather than `setupMaster`
+  args. Custom `server` config now works, and receives all properties from
+  the parsed CLI arguments.
+
+* Changed all pidfile IO to be synchronous. It's not frequent enough to justify
+  the indeterminate nature of asynchronicity (which wasn't even used, anyway).
+
+* Added more tests, increasing code coverage slightly.
+
 0.3.0 (2013-04-22)
 ------------------
 
