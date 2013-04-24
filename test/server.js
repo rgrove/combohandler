@@ -499,6 +499,10 @@ describe('combohandler', function () {
                 combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
                 combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
             combo.respond);
+
+            app.get('/route-only/:version/lib',
+                combo.combine({ rootPath: __dirname + '/fixtures/root' }),
+            combo.respond);
         });
 
         it("should work when param found at end of path", function (done) {
@@ -558,6 +562,17 @@ describe('combohandler', function () {
 
         it("should not fail when param not present", function (done) {
             request(BASE_URL + '/non-dynamic?a.js&b.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('a();\n\nb();\n');
+                done();
+            });
+        });
+
+        it("should work when param only found in route, not rootPath", function (done) {
+            request(BASE_URL + '/route-only/deadbeef/lib?js/a.js&js/b.js', function (err, res, body) {
                 assert.ifError(err);
                 res.should.have.status(200);
                 res.should.have.header('content-type', 'application/javascript; charset=utf-8');
