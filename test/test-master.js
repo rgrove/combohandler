@@ -7,6 +7,7 @@ var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
 
 describe("cluster master", function () {
+    var cluster = require('cluster');
     var PIDS_DIR = 'test/fixtures/pids';
 
     after(cleanPidsDir);
@@ -58,10 +59,13 @@ describe("cluster master", function () {
         it("should detach events, passing through callback", function (done) {
             var instance = new ComboMaster();
 
-            instance._bindProcess();
+            instance._attachEvents();
+
+            hasAttachedClusterEvents();
             hasAttachedSignalEvents();
 
             instance.destroy(function () {
+                hasDetachedClusterEvents();
                 hasDetachedSignalEvents();
 
                 done();
@@ -113,6 +117,13 @@ describe("cluster master", function () {
         it("should attach signal events", function (done) {
             master.emit('start', function () {
                 hasAttachedSignalEvents();
+                done();
+            });
+        });
+
+        it("should attach cluster events", function (done) {
+            master.emit('start', function () {
+                hasAttachedClusterEvents();
                 done();
             });
         });
@@ -198,6 +209,22 @@ describe("cluster master", function () {
     });
 
     // Test Utilities ---------------------------------------------------------
+
+    function hasAttachedClusterEvents() {
+        cluster.listeners('fork'        ).should.have.length(1);
+        cluster.listeners('online'      ).should.have.length(1);
+        cluster.listeners('listening'   ).should.have.length(1);
+        cluster.listeners('disconnect'  ).should.have.length(1);
+        cluster.listeners('exit'        ).should.have.length(1);
+    }
+
+    function hasDetachedClusterEvents() {
+        cluster.listeners('fork'        ).should.be.empty;
+        cluster.listeners('online'      ).should.be.empty;
+        cluster.listeners('listening'   ).should.be.empty;
+        cluster.listeners('disconnect'  ).should.be.empty;
+        cluster.listeners('exit'        ).should.be.empty;
+    }
 
     function hasAttachedSignalEvents() {
         process.listeners('SIGINT' ).should.have.length(1);
