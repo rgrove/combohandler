@@ -42,15 +42,15 @@ describe("cluster worker", function () {
     });
 
     describe("on 'listen'", function () {
-        it("should create server", function (done) {
+        it("should create server and emit 'listening'", function (done) {
             var instance = new ComboWorker();
 
-            instance.listen();
-
-            process.nextTick(function () {
+            instance.once('listening', function () {
                 instance.should.have.property('_server');
                 instance.destroy(done);
             });
+
+            instance.listen();
         });
     });
 });
