@@ -221,7 +221,10 @@ Combine Options:
   -r, --root        String matching the pattern '{route}:{rootPath}'.
                         You may pass any number of unique --root configs.
   -f, --rootsFile   Path to JSON routes config, *exclusive* of --root.
-  -b, --basePath    Path to prepend when rewriting relative url()s.         ['']
+  -b, --basePath    URL path to prepend when rewriting relative url()s.     ['']
+  -w, --webRoot     Filesystem path to base rewritten relative url()s from. ['']
+                    Use this instead of --basePath when using route parameters.
+                    Overrides behaviour of --basePath.
   -m, --maxAge      'Cache-Control' and 'Expires' value, in seconds.  [31536000]
                     Set this to `0` to expire immediately, `null` to omit these
                     headers entirely.
