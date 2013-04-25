@@ -249,6 +249,86 @@ describe('combohandler', function () {
 
     // -- URL Rewrites ---------------------------------------------------------
     describe("url rewrites", function () {
+        var URLS_UNMODIFIED = [
+            "#no-quotes { background: url(no-quotes.png);}",
+            "#single-quotes { background: url(\'single-quotes.png\');}",
+            "#double-quotes { background: url(\"double-quotes.png\");}",
+            "#spaces { background: url(",
+            "  \"spaces.png\" );}",
+            "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
+            "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+            "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+            "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
+            ".unicode-raw { background: url(déchaîné.png); }",
+            // NOTE: we do not currently support the space terminator for CSS escapes.
+            // ".unicode-escaped { background: url(d\\E9 cha\\EEn\\E9.png); }",
+            ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
+            ".nl-craziness { background:",
+            "    url(crazy.png",
+            "    ); }",
+            ""
+        ].join("\n");
+
+        var URLS_REWRITTEN = [
+            "#no-quotes { background: url(/rewritten/no-quotes.png);}",
+            "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
+            "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
+            "#spaces { background: url(",
+            "  \"/rewritten/spaces.png\" );}",
+            "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
+            "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+            "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+            "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
+            ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
+            // NOTE: we do not currently support the space terminator for CSS escapes.
+            // ".unicode-escaped { background: url(/rewritten/d\\E9 cha\\EEn\\E9.png); }",
+            ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
+            ".nl-craziness { background:",
+            "    url(/rewritten/crazy.png",
+            "    ); }",
+            ""
+        ].join("\n");
+
+        var MORE_URLS_REWRITTEN = [
+            URLS_REWRITTEN,
+            "#depth { background: url(/rewritten/deeper/deeper.png);}",
+            "#up-one { background: url(/rewritten/shallower.png);}",
+            "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
+        ].join("\n");
+
+        var IMPORTS_UNMODIFIED = [
+            "@import 'basic-sq.css';",
+            "@import \"basic-dq.css\";",
+            "@import url(url-uq.css);",
+            "@import url('url-sq.css');",
+            "@import url(\"url-dq.css\");",
+            "@import \"media-simple.css\" print;",
+            "@import url(\"media-simple-url.css\") print;",
+            "@import 'media-simple-comma.css' print, screen;",
+            "@import \"media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
+            "@import url(\"media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
+            "@import \"../rewrite/deeper/more.css\";",
+            "@import \"../root/css/a.css\" (device-width: 320px);",
+            ""
+        ].join("\n");
+
+        var IMPORTS_REWRITTEN = [
+            "@import '/rewritten/basic-sq.css';",
+            "@import \"/rewritten/basic-dq.css\";",
+            "@import url(/rewritten/url-uq.css);",
+            "@import url('/rewritten/url-sq.css');",
+            "@import url(\"/rewritten/url-dq.css\");",
+            "@import \"/rewritten/media-simple.css\" print;",
+            "@import url(\"/rewritten/media-simple-url.css\") print;",
+            "@import '/rewritten/media-simple-comma.css' print, screen;",
+            "@import \"/rewritten/media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
+            "@import url(\"/rewritten/media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
+            // TODO: are the following rewritten correctly?
+            "@import \"/rewrite/deeper/more.css\";",
+            "@import \"/root/css/a.css\" (device-width: 320px);",
+            ""
+        ].join("\n");
+
         before(function () {
             app.get('/norewrite', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite'
@@ -274,23 +354,7 @@ describe('combohandler', function () {
         it("should allow the basePath to end in a slash", function (done) {
             request(BASE_URL + "/rewrite-noslash?urls.css", function (err, res, body) {
                 assert.ifError(err);
-                body.should.equal([
-                    "#no-quotes { background: url(/rewritten/no-quotes.png);}",
-                    "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
-                    "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
-                    "#spaces { background: url(",
-                    "  \"/rewritten/spaces.png\" );}",
-                    "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                    "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
-                    ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
-                    ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
-                    ".nl-craziness { background:",
-                    "    url(/rewritten/crazy.png",
-                    "    ); }",
-                    ""
-                ].join("\n"));
+                body.should.equal(URLS_REWRITTEN);
                 done();
             });
         });
@@ -298,23 +362,7 @@ describe('combohandler', function () {
         it("should not rewrite without a basePath", function (done) {
             request(BASE_URL + "/norewrite?urls.css", function (err, res, body) {
                 assert.ifError(err);
-                body.should.equal([
-                    "#no-quotes { background: url(no-quotes.png);}",
-                    "#single-quotes { background: url(\'single-quotes.png\');}",
-                    "#double-quotes { background: url(\"double-quotes.png\");}",
-                    "#spaces { background: url(",
-                    "  \"spaces.png\" );}",
-                    "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                    "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
-                    ".unicode-raw { background: url(déchaîné.png); }",
-                    ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
-                    ".nl-craziness { background:",
-                    "    url(crazy.png",
-                    "    ); }",
-                    ""
-                ].join("\n"));
+                body.should.equal(URLS_UNMODIFIED);
                 done();
             });
         });
@@ -322,28 +370,7 @@ describe('combohandler', function () {
         it("should rewrite valid urls", function (done) {
             request(BASE_URL + "/rewrite?urls.css&deeper/more.css", function (err, res, body) {
                 assert.ifError(err);
-                body.should.equal([
-                    "#no-quotes { background: url(/rewritten/no-quotes.png);}",
-                    "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
-                    "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
-                    "#spaces { background: url(",
-                    "  \"/rewritten/spaces.png\" );}",
-                    "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                    "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
-                    ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
-                    // NOTE: we do not currently support the space terminator for CSS escapes.
-                    // ".unicode-escaped { background: url(/rewritten/d\\E9 cha\\EEn\\E9.png); }",
-                    ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
-                    ".nl-craziness { background:",
-                    "    url(/rewritten/crazy.png",
-                    "    ); }",
-                    "",
-                    "#depth { background: url(/rewritten/deeper/deeper.png);}",
-                    "#up-one { background: url(/rewritten/shallower.png);}",
-                    "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
-                ].join("\n"));
+                body.should.equal(MORE_URLS_REWRITTEN);
                 done();
             });
         });
@@ -351,22 +378,7 @@ describe('combohandler', function () {
         it("should rewrite import paths when enabled from combine", function (done) {
             request(BASE_URL + "/rewrite-imports?imports.css", function (err, res, body) {
                 assert.ifError(err);
-                body.should.equal([
-                    "@import '/rewritten/basic-sq.css';",
-                    "@import \"/rewritten/basic-dq.css\";",
-                    "@import url(/rewritten/url-uq.css);",
-                    "@import url('/rewritten/url-sq.css');",
-                    "@import url(\"/rewritten/url-dq.css\");",
-                    "@import \"/rewritten/media-simple.css\" print;",
-                    "@import url(\"/rewritten/media-simple-url.css\") print;",
-                    "@import '/rewritten/media-simple-comma.css' print, screen;",
-                    "@import \"/rewritten/media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
-                    "@import url(\"/rewritten/media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
-                    // TODO: are the following rewritten correctly?
-                    "@import \"/rewrite/deeper/more.css\";",
-                    "@import \"/root/css/a.css\" (device-width: 320px);",
-                    ""
-                ].join("\n"));
+                body.should.equal(IMPORTS_REWRITTEN);
                 done();
             });
         });
@@ -413,23 +425,7 @@ describe('combohandler', function () {
             it("should not rewrite when before combine()", function (done) {
                 request(BASE_URL + "/rewrite-middleware-before-combine?urls.css", function (err, res, body) {
                     assert.ifError(err);
-                    body.should.equal([
-                        "#no-quotes { background: url(no-quotes.png);}",
-                        "#single-quotes { background: url(\'single-quotes.png\');}",
-                        "#double-quotes { background: url(\"double-quotes.png\");}",
-                        "#spaces { background: url(",
-                        "  \"spaces.png\" );}",
-                        "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                        "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
-                        ".unicode-raw { background: url(déchaîné.png); }",
-                        ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
-                        ".nl-craziness { background:",
-                        "    url(crazy.png",
-                        "    ); }",
-                        ""
-                    ].join("\n"));
+                    body.should.equal(URLS_UNMODIFIED);
                     done();
                 });
             });
@@ -437,23 +433,7 @@ describe('combohandler', function () {
             it("should not rewrite without a basePath", function (done) {
                 request(BASE_URL + "/rewrite-middleware-noconfig?urls.css", function (err, res, body) {
                     assert.ifError(err);
-                    body.should.equal([
-                        "#no-quotes { background: url(no-quotes.png);}",
-                        "#single-quotes { background: url(\'single-quotes.png\');}",
-                        "#double-quotes { background: url(\"double-quotes.png\");}",
-                        "#spaces { background: url(",
-                        "  \"spaces.png\" );}",
-                        "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                        "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
-                        ".unicode-raw { background: url(déchaîné.png); }",
-                        ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
-                        ".nl-craziness { background:",
-                        "    url(crazy.png",
-                        "    ); }",
-                        ""
-                    ].join("\n"));
+                    body.should.equal(URLS_UNMODIFIED);
                     done();
                 });
             });
@@ -461,26 +441,7 @@ describe('combohandler', function () {
             it("should rewrite valid urls", function (done) {
                 request(BASE_URL + "/rewrite-middleware?urls.css&deeper/more.css", function (err, res, body) {
                     assert.ifError(err);
-                    body.should.equal([
-                        "#no-quotes { background: url(/rewritten/no-quotes.png);}",
-                        "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
-                        "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
-                        "#spaces { background: url(",
-                        "  \"/rewritten/spaces.png\" );}",
-                        "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                        "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
-                        ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
-                        ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
-                        ".nl-craziness { background:",
-                        "    url(/rewritten/crazy.png",
-                        "    ); }",
-                        "",
-                        "#depth { background: url(/rewritten/deeper/deeper.png);}",
-                        "#up-one { background: url(/rewritten/shallower.png);}",
-                        "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
-                    ].join("\n"));
+                    body.should.equal(MORE_URLS_REWRITTEN);
                     done();
                 });
             });
@@ -488,21 +449,7 @@ describe('combohandler', function () {
             it("should NOT rewrite import paths when disabled", function (done) {
                 request(BASE_URL + "/rewrite-middleware?imports.css", function (err, res, body) {
                     assert.ifError(err);
-                    body.should.equal([
-                        "@import 'basic-sq.css';",
-                        "@import \"basic-dq.css\";",
-                        "@import url(url-uq.css);",
-                        "@import url('url-sq.css');",
-                        "@import url(\"url-dq.css\");",
-                        "@import \"media-simple.css\" print;",
-                        "@import url(\"media-simple-url.css\") print;",
-                        "@import 'media-simple-comma.css' print, screen;",
-                        "@import \"media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
-                        "@import url(\"media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
-                        "@import \"../rewrite/deeper/more.css\";",
-                        "@import \"../root/css/a.css\" (device-width: 320px);",
-                        ""
-                    ].join("\n"));
+                    body.should.equal(IMPORTS_UNMODIFIED);
                     done();
                 });
             });
@@ -510,22 +457,7 @@ describe('combohandler', function () {
             it("should rewrite import paths when enabled", function (done) {
                 request(BASE_URL + "/rewrite-middleware-imports?imports.css", function (err, res, body) {
                     assert.ifError(err);
-                    body.should.equal([
-                        "@import '/rewritten/basic-sq.css';",
-                        "@import \"/rewritten/basic-dq.css\";",
-                        "@import url(/rewritten/url-uq.css);",
-                        "@import url('/rewritten/url-sq.css');",
-                        "@import url(\"/rewritten/url-dq.css\");",
-                        "@import \"/rewritten/media-simple.css\" print;",
-                        "@import url(\"/rewritten/media-simple-url.css\") print;",
-                        "@import '/rewritten/media-simple-comma.css' print, screen;",
-                        "@import \"/rewritten/media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
-                        "@import url(\"/rewritten/media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
-                        // TODO: are the following rewritten correctly?
-                        "@import \"/rewrite/deeper/more.css\";",
-                        "@import \"/root/css/a.css\" (device-width: 320px);",
-                        ""
-                    ].join("\n"));
+                    body.should.equal(IMPORTS_REWRITTEN);
                     done();
                 });
             });
