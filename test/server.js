@@ -119,6 +119,59 @@ describe('combohandler', function () {
         });
     });
 
+    describe('config: basePath', function () {
+        describe('when absent', function () {
+            it("should NOT append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine();
+                callbacks.should.have.lengthOf(1);
+                callbacks[0].name.should.not.equal('cssUrlsMiddleware');
+            });
+        });
+
+        describe('when present', function () {
+            it("should append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine({ basePath: 'foo' });
+                callbacks.should.have.lengthOf(2);
+                callbacks[1].name.should.equal('cssUrlsMiddleware');
+            });
+        });
+    });
+
+    describe('config: webRoot', function () {
+        describe('when absent', function () {
+            it("should NOT append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine();
+                callbacks.should.have.lengthOf(1);
+                callbacks[0].name.should.not.equal('cssUrlsMiddleware');
+            });
+        });
+
+        describe('when present', function () {
+            it("should append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine({ webRoot: 'foo' });
+                callbacks.should.have.lengthOf(2);
+                callbacks[1].name.should.equal('cssUrlsMiddleware');
+            });
+        });
+    });
+
+    describe('config: rootPath', function () {
+        it("should error when value does not exist", function () {
+            /*jshint immed: false */
+            (function () {
+                combo.combine({ rootPath: '/foo' });
+            }).should.throwError();
+        });
+
+        describe('with route parameters', function () {
+            it("should prepend dynamicPath middleware to callbacks", function () {
+                var callbacks = combo.combine({ rootPath: __dirname + '/fixtures/:root/js' });
+                callbacks.should.have.lengthOf(2);
+                callbacks[0].name.should.equal('dynamicPathMiddleware');
+            });
+        });
+    });
+
     // -- Errors ---------------------------------------------------------------
     describe('errors', function () {
         before(function () {
