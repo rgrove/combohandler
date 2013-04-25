@@ -247,7 +247,7 @@ describe('combohandler', function () {
         });
     });
 
-    // -- URL Rewrites ---------------------------------------------------------
+    // -- Optional Middleware --------------------------------------------------
     describe("url rewrites", function () {
         var URLS_UNMODIFIED = [
             "#no-quotes { background: url(no-quotes.png);}",
@@ -464,7 +464,6 @@ describe('combohandler', function () {
         });
     });
 
-    // Dynamic Paths ----------------------------------------------------------
     describe("dynamic paths", function () {
         before(function () {
             app.get('/dynamic/:version',
