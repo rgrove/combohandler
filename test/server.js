@@ -28,6 +28,13 @@ describe('combohandler', function () {
         httpServer.close();
     });
 
+    it("should return an array of middleware callbacks when invoked", function () {
+        var callbacks = combo.combine();
+        callbacks.should.be.an.instanceOf(Array);
+        callbacks.should.have.lengthOf(1);
+        callbacks[0].name.should.equal('combineMiddleware');
+    });
+
     it('should combine JavaScript', function (done) {
         request(BASE_URL + '/js?a.js&b.js', function (err, res, body) {
             assert.ifError(err);
