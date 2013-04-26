@@ -12,7 +12,7 @@ Combo Handler History
   relative" pathname instead of always resolving to the rootPath.
 
 * Reorganized tests to cut down on repetitive string concatenation and
-  clarify intention.
+  clarify intention. Also added a bunch of complex symlink tests.
 
 0.3.1 (2013-04-24)
 ------------------

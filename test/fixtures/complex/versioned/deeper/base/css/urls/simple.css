@@ -1,0 +1,6 @@
+@import "../parent.css";
+@import "child/dir.css";
+@import "./sibling.css";
+@import "../urls/also-sibling.css";
+.relatives { background: url(../../images/cousin.png); }
+.offspring { background: url(./images/grandchild.png); }
