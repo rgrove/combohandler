@@ -1,4 +1,7 @@
 /*global describe, before, after, it */
+var fs = require('fs');
+var path = require('path');
+
 var combo   = require('../'),
     server  = require('../lib/server'),
 
@@ -26,6 +29,13 @@ describe('combohandler', function () {
 
     after(function () {
         httpServer.close();
+    });
+
+    it("should return an array of middleware callbacks when invoked", function () {
+        var callbacks = combo.combine();
+        callbacks.should.be.an.instanceOf(Array);
+        callbacks.should.have.lengthOf(1);
+        callbacks[0].name.should.equal('combineMiddleware');
     });
 
     it('should combine JavaScript', function (done) {
@@ -108,6 +118,59 @@ describe('combohandler', function () {
                 ((expires - Date.now()) / 1000).should.be.within(-5, 5);
 
                 done();
+            });
+        });
+    });
+
+    describe('config: basePath', function () {
+        describe('when absent', function () {
+            it("should NOT append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine();
+                callbacks.should.have.lengthOf(1);
+                callbacks[0].name.should.not.equal('cssUrlsMiddleware');
+            });
+        });
+
+        describe('when present', function () {
+            it("should append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine({ basePath: 'foo' });
+                callbacks.should.have.lengthOf(2);
+                callbacks[1].name.should.equal('cssUrlsMiddleware');
+            });
+        });
+    });
+
+    describe('config: webRoot', function () {
+        describe('when absent', function () {
+            it("should NOT append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine();
+                callbacks.should.have.lengthOf(1);
+                callbacks[0].name.should.not.equal('cssUrlsMiddleware');
+            });
+        });
+
+        describe('when present', function () {
+            it("should append cssUrls middleware to callbacks", function () {
+                var callbacks = combo.combine({ webRoot: 'foo' });
+                callbacks.should.have.lengthOf(2);
+                callbacks[1].name.should.equal('cssUrlsMiddleware');
+            });
+        });
+    });
+
+    describe('config: rootPath', function () {
+        it("should error when value does not exist", function () {
+            /*jshint immed: false */
+            (function () {
+                combo.combine({ rootPath: '/foo' });
+            }).should.throwError();
+        });
+
+        describe('with route parameters', function () {
+            it("should prepend dynamicPath middleware to callbacks", function () {
+                var callbacks = combo.combine({ rootPath: __dirname + '/fixtures/:root/js' });
+                callbacks.should.have.lengthOf(2);
+                callbacks[0].name.should.equal('dynamicPathMiddleware');
             });
         });
     });
@@ -247,8 +310,62 @@ describe('combohandler', function () {
         });
     });
 
-    // -- URL Rewrites ---------------------------------------------------------
+    // -- Optional Middleware --------------------------------------------------
     describe("url rewrites", function () {
+        var TEMPLATE_URLS = [
+            "#no-quotes { background: url(__PATH__no-quotes.png);}",
+            "#single-quotes { background: url(\'__PATH__single-quotes.png\');}",
+            "#double-quotes { background: url(\"__PATH__double-quotes.png\");}",
+            "#spaces { background: url(",
+            "  \"__PATH__spaces.png\" );}",
+            "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
+            "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+            "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
+            "#escaped-stuff { background:url(\"__PATH__\\)\\\";\\'\\(.png\"); }",
+            ".unicode-raw { background: url(__PATH__déchaîné.png); }",
+            // NOTE: we do not currently support the space terminator for CSS escapes.
+            // ".unicode-escaped { background: url(__PATH__d\\E9 cha\\EEn\\E9.png); }",
+            ".unicode-escaped { background: url(__PATH__d\\0000E9cha\\EEn\\E9.png); }",
+            ".nl-craziness { background:",
+            "    url(__PATH__crazy.png",
+            "    ); }",
+            ""
+        ].join("\n");
+
+        var TEMPLATE_MORE = [
+            "#depth { background: url(__PATH__deeper/deeper.png);}",
+            "#up-one { background: url(__PATH__shallower.png);}",
+            "#down-one { background: url(__PATH__deeper/more/down-one.png);}"
+        ].join("\n");
+
+        var TEMPLATE_IMPORTS = [
+            "@import '__PATH__basic-sq.css';",
+            "@import \"__PATH__basic-dq.css\";",
+            "@import url(__PATH__url-uq.css);",
+            "@import url('__PATH__url-sq.css');",
+            "@import url(\"__PATH__url-dq.css\");",
+            "@import \"__PATH__media-simple.css\" print;",
+            "@import url(\"__PATH__media-simple-url.css\") print;",
+            "@import '__PATH__media-simple-comma.css' print, screen;",
+            "@import \"__PATH__media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
+            "@import url(\"__PATH__media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
+            // TODO: are the following rewritten correctly?
+            "@import \"__DOTS__/rewrite/deeper/more.css\";",
+            "@import \"__DOTS__/root/css/a.css\" (device-width: 320px);",
+            ""
+        ].join("\n");
+
+        var URLS_UNMODIFIED = TEMPLATE_URLS.replace(/__PATH__/g, '');
+        var IMPORTS_UNMODIFIED = TEMPLATE_IMPORTS.replace(/__PATH__/g, '').replace(/__DOTS__/g, '..');
+
+        function assertRequestBodyIs(reqPath, result, done) {
+            request(BASE_URL + reqPath, function (err, res, body) {
+                assert.ifError(err);
+                body.should.equal(result);
+                done();
+            });
+        }
+
         before(function () {
             app.get('/norewrite', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite'
@@ -256,12 +373,12 @@ describe('combohandler', function () {
 
             app.get('/rewrite', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite',
-                basePath: "/rewritten"
+                basePath: "/rewritten/"
             }), combo.respond);
 
             app.get('/rewrite-noslash', combo.combine({
                 rootPath: __dirname + '/fixtures/rewrite',
-                basePath: "/rewritten/"
+                basePath: "/rewritten"
             }), combo.respond);
 
             app.get('/rewrite-imports', combo.combine({
@@ -269,212 +386,99 @@ describe('combohandler', function () {
                 basePath: "/rewritten/",
                 rewriteImports: true
             }), combo.respond);
+
+            app.get('/rewrite-middleware-before-combine',
+                combo.cssUrls({ basePath: "/rewritten/" }),
+                combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+            combo.respond);
+
+            app.get('/rewrite-middleware-noconfig',
+                combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+                combo.cssUrls(),
+            combo.respond);
+
+            app.get('/rewrite-root', combo.combine({
+                rootPath: __dirname + '/fixtures/rewrite',
+                webRoot:  __dirname + '/fixtures/'
+            }), combo.respond);
+
+            app.get('/rewrite-root-noslash', combo.combine({
+                rootPath: __dirname + '/fixtures/rewrite',
+                webRoot:  __dirname + '/fixtures'
+            }), combo.respond);
+
+            app.get('/rewrite-root-imports', combo.combine({
+                rootPath: __dirname + '/fixtures/rewrite',
+                webRoot:  __dirname + '/fixtures/',
+                rewriteImports: true
+            }), combo.respond);
         });
 
-        it("should allow the basePath to end in a slash", function (done) {
-            request(BASE_URL + "/rewrite-noslash?urls.css", function (err, res, body) {
-                assert.ifError(err);
-                body.should.equal([
-                    "#no-quotes { background: url(/rewritten/no-quotes.png);}",
-                    "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
-                    "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
-                    "#spaces { background: url(",
-                    "  \"/rewritten/spaces.png\" );}",
-                    "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                    "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
-                    ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
-                    ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
-                    ".nl-craziness { background:",
-                    "    url(/rewritten/crazy.png",
-                    "    ); }",
-                    ""
-                ].join("\n"));
-                done();
-            });
+        it("should not rewrite without a basePath or webRoot", function (done) {
+            assertRequestBodyIs("/norewrite?urls.css", URLS_UNMODIFIED, done);
         });
 
-        it("should not rewrite without a basePath", function (done) {
-            request(BASE_URL + "/norewrite?urls.css", function (err, res, body) {
-                assert.ifError(err);
-                body.should.equal([
-                    "#no-quotes { background: url(no-quotes.png);}",
-                    "#single-quotes { background: url(\'single-quotes.png\');}",
-                    "#double-quotes { background: url(\"double-quotes.png\");}",
-                    "#spaces { background: url(",
-                    "  \"spaces.png\" );}",
-                    "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                    "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"\\)\\\";\\'\\(.png\"); }",
-                    ".unicode-raw { background: url(déchaîné.png); }",
-                    ".unicode-escaped { background: url(d\\0000E9cha\\EEn\\E9.png); }",
-                    ".nl-craziness { background:",
-                    "    url(crazy.png",
-                    "    ); }",
-                    ""
-                ].join("\n"));
-                done();
-            });
+        it("should not rewrite without a basePath or webRoot as middleware", function (done) {
+            assertRequestBodyIs("/rewrite-middleware-noconfig?urls.css", URLS_UNMODIFIED, done);
         });
 
-        it("should rewrite valid urls", function (done) {
-            request(BASE_URL + "/rewrite?urls.css&deeper/more.css", function (err, res, body) {
-                assert.ifError(err);
-                body.should.equal([
-                    "#no-quotes { background: url(/rewritten/no-quotes.png);}",
-                    "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
-                    "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
-                    "#spaces { background: url(",
-                    "  \"/rewritten/spaces.png\" );}",
-                    "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                    "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                    "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
-                    ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
-                    // NOTE: we do not currently support the space terminator for CSS escapes.
-                    // ".unicode-escaped { background: url(/rewritten/d\\E9 cha\\EEn\\E9.png); }",
-                    ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
-                    ".nl-craziness { background:",
-                    "    url(/rewritten/crazy.png",
-                    "    ); }",
-                    "",
-                    "#depth { background: url(/rewritten/deeper/deeper.png);}",
-                    "#up-one { background: url(/rewritten/shallower.png);}",
-                    "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
-                ].join("\n"));
-                done();
-            });
+        it("should not rewrite when middleware before combine()", function (done) {
+            assertRequestBodyIs("/rewrite-middleware-before-combine?urls.css", URLS_UNMODIFIED, done);
         });
 
-        it("should rewrite import paths when enabled from combine", function (done) {
-            request(BASE_URL + "/rewrite-imports?imports.css", function (err, res, body) {
-                assert.ifError(err);
-                body.should.equal([
-                    "@import '/rewritten/basic-sq.css';",
-                    "@import \"/rewritten/basic-dq.css\";",
-                    "@import url(/rewritten/url-uq.css);",
-                    "@import url('/rewritten/url-sq.css');",
-                    "@import url(\"/rewritten/url-dq.css\");",
-                    "@import \"/rewritten/media-simple.css\" print;",
-                    "@import url(\"/rewritten/media-simple-url.css\") print;",
-                    "@import '/rewritten/media-simple-comma.css' print, screen;",
-                    "@import \"/rewritten/media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
-                    "@import url(\"/rewritten/media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
-                    // TODO: are the following rewritten correctly?
-                    "@import \"/rewrite/deeper/more.css\";",
-                    "@import \"/root/css/a.css\" (device-width: 320px);",
-                    ""
-                ].join("\n"));
-                done();
-            });
-        });
+        describe("with configured basePath", function () {
+            var URLS_REWRITTEN = TEMPLATE_URLS.replace(/__PATH__/g, '/rewritten/');
+            var MORE_REWRITTEN = TEMPLATE_MORE.replace(/__PATH__/g, '/rewritten/');
 
-        describe("as middleware", function () {
-            before(function () {
-                app.get('/rewrite-middleware-ignore',
-                    combo.combine({ rootPath: __dirname + '/fixtures/root/js' }),
-                    combo.cssUrls({ basePath: "/rewritten/" }),
-                combo.respond);
+            var MORE_URLS_REWRITTEN = [URLS_REWRITTEN, MORE_REWRITTEN].join("\n");
 
-                app.get('/rewrite-middleware',
-                    combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
-                    combo.cssUrls({ basePath: "/rewritten/" }),
-                combo.respond);
+            var IMPORTS_REWRITTEN = TEMPLATE_IMPORTS.replace(/__PATH__/g, '/rewritten/')
+                                                    .replace(/__DOTS__/g, '');
 
-                app.get('/rewrite-middleware-imports',
-                    combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
-                    combo.cssUrls({ basePath: "/rewritten/", rewriteImports: true }),
-                combo.respond);
-            });
-
-            it("should avoid modifying non-CSS requests", function (done) {
-                request(BASE_URL + '/rewrite-middleware-ignore?a.js&b.js', function (err, res, body) {
-                    assert.ifError(err);
-                    res.should.have.status(200);
-                    res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                    res.should.have.header('last-modified');
-                    body.should.equal('a();\n\nb();\n');
-                    done();
-                });
+            it("should allow basePath without trailing slash", function (done) {
+                assertRequestBodyIs("/rewrite-noslash?urls.css", URLS_REWRITTEN, done);
             });
 
             it("should rewrite valid urls", function (done) {
-                request(BASE_URL + "/rewrite-middleware?urls.css&deeper/more.css", function (err, res, body) {
-                    assert.ifError(err);
-                    body.should.equal([
-                        "#no-quotes { background: url(/rewritten/no-quotes.png);}",
-                        "#single-quotes { background: url(\'/rewritten/single-quotes.png\');}",
-                        "#double-quotes { background: url(\"/rewritten/double-quotes.png\");}",
-                        "#spaces { background: url(",
-                        "  \"/rewritten/spaces.png\" );}",
-                        "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-                        "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-                        "#escaped-stuff { background:url(\"/rewritten/\\)\\\";\\'\\(.png\"); }",
-                        ".unicode-raw { background: url(/rewritten/déchaîné.png); }",
-                        ".unicode-escaped { background: url(/rewritten/d\\0000E9cha\\EEn\\E9.png); }",
-                        ".nl-craziness { background:",
-                        "    url(/rewritten/crazy.png",
-                        "    ); }",
-                        "",
-                        "#depth { background: url(/rewritten/deeper/deeper.png);}",
-                        "#up-one { background: url(/rewritten/shallower.png);}",
-                        "#down-one { background: url(/rewritten/deeper/more/down-one.png);}"
-                    ].join("\n"));
-                    done();
-                });
+                assertRequestBodyIs("/rewrite?urls.css&deeper/more.css", MORE_URLS_REWRITTEN, done);
             });
 
             it("should NOT rewrite import paths when disabled", function (done) {
-                request(BASE_URL + "/rewrite-middleware?imports.css", function (err, res, body) {
-                    assert.ifError(err);
-                    body.should.equal([
-                        "@import 'basic-sq.css';",
-                        "@import \"basic-dq.css\";",
-                        "@import url(url-uq.css);",
-                        "@import url('url-sq.css');",
-                        "@import url(\"url-dq.css\");",
-                        "@import \"media-simple.css\" print;",
-                        "@import url(\"media-simple-url.css\") print;",
-                        "@import 'media-simple-comma.css' print, screen;",
-                        "@import \"media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
-                        "@import url(\"media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
-                        "@import \"../rewrite/deeper/more.css\";",
-                        "@import \"../root/css/a.css\" (device-width: 320px);",
-                        ""
-                    ].join("\n"));
-                    done();
-                });
+                assertRequestBodyIs("/rewrite?imports.css", IMPORTS_UNMODIFIED, done);
             });
 
             it("should rewrite import paths when enabled", function (done) {
-                request(BASE_URL + "/rewrite-middleware-imports?imports.css", function (err, res, body) {
-                    assert.ifError(err);
-                    body.should.equal([
-                        "@import '/rewritten/basic-sq.css';",
-                        "@import \"/rewritten/basic-dq.css\";",
-                        "@import url(/rewritten/url-uq.css);",
-                        "@import url('/rewritten/url-sq.css');",
-                        "@import url(\"/rewritten/url-dq.css\");",
-                        "@import \"/rewritten/media-simple.css\" print;",
-                        "@import url(\"/rewritten/media-simple-url.css\") print;",
-                        "@import '/rewritten/media-simple-comma.css' print, screen;",
-                        "@import \"/rewritten/media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
-                        "@import url(\"/rewritten/media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
-                        // TODO: are the following rewritten correctly?
-                        "@import \"/rewrite/deeper/more.css\";",
-                        "@import \"/root/css/a.css\" (device-width: 320px);",
-                        ""
-                    ].join("\n"));
-                    done();
-                });
+                assertRequestBodyIs("/rewrite-imports?imports.css", IMPORTS_REWRITTEN, done);
+            });
+        });
+
+        describe("with configured webRoot", function () {
+            var URLS_REBASED = TEMPLATE_URLS.replace(/__PATH__/g, '/rewrite/');
+            var MORE_REBASED = TEMPLATE_MORE.replace(/__PATH__/g, '/rewrite/');
+
+            var MORE_URLS_REBASED = [URLS_REBASED, MORE_REBASED].join("\n");
+
+            var IMPORTS_REBASED = TEMPLATE_IMPORTS.replace(/__PATH__/g, '/rewrite/')
+                                                  .replace(/__DOTS__/g, '');
+
+            it("should allow webRoot without trailing slash", function (done) {
+                assertRequestBodyIs("/rewrite-root-noslash?urls.css", URLS_REBASED, done);
+            });
+
+            it("should rewrite valid urls", function (done) {
+                assertRequestBodyIs("/rewrite-root?urls.css&deeper/more.css", MORE_URLS_REBASED, done);
+            });
+
+            it("should NOT rewrite import paths when disabled", function (done) {
+                assertRequestBodyIs("/rewrite-root?imports.css", IMPORTS_UNMODIFIED, done);
+            });
+
+            it("should rewrite import paths when enabled", function (done) {
+                assertRequestBodyIs("/rewrite-root-imports?imports.css", IMPORTS_REBASED, done);
             });
         });
     });
 
-    // Dynamic Paths ----------------------------------------------------------
     describe("dynamic paths", function () {
         before(function () {
             app.get('/dynamic/:version',
@@ -497,6 +501,11 @@ describe('combohandler', function () {
 
             app.get('/non-dynamic',
                 combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
+                combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
+            combo.respond);
+
+            app.get('/dynamic-no-config',
+                combo.dynamicPath(),
                 combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
             combo.respond);
 
@@ -571,6 +580,17 @@ describe('combohandler', function () {
             });
         });
 
+        it("should not fail when config missing", function (done) {
+            request(BASE_URL + '/dynamic-no-config?a.js&b.js', function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
+                res.should.have.header('last-modified');
+                body.should.equal('a();\n\nb();\n');
+                done();
+            });
+        });
+
         it("should work when param only found in route, not rootPath", function (done) {
             request(BASE_URL + '/route-only/deadbeef/lib?js/a.js&js/b.js', function (err, res, body) {
                 assert.ifError(err);
@@ -588,6 +608,188 @@ describe('combohandler', function () {
                 res.should.have.status(400);
                 body.should.equal('Bad request. Unable to resolve path: /dynamic/deadbeef');
                 done();
+            });
+        });
+    });
+
+    // -- Complex Integration --------------------------------------------------
+    describe("complex", function () {
+        // Strange things may happen when you mix symlinks, parameters, and complex routes
+        var COMPLEX_ROOT = __dirname + '/fixtures/complex';
+
+        var TEMPLATE_IMPORTS_SIMPLE = [
+            '@import "__ROOT__css/parent.css";',
+            '@import "__ROOT__css/urls/child/dir.css";',
+            '@import "__ROOT__css/urls/sibling.css";',
+            '@import "__ROOT__css/urls/also-sibling.css";',
+            ''
+        ].join('\n');
+        var TEMPLATE_URLS_SIMPLE = [
+            '.relatives { background: url(__ROOT__images/cousin.png); }',
+            '.offspring { background: url(__ROOT__css/urls/images/grandchild.png); }',
+            ''
+        ].join('\n');
+        var TEMPLATE_SIMPLE = TEMPLATE_IMPORTS_SIMPLE + TEMPLATE_URLS_SIMPLE;
+
+        var SIMPLE_IMPORTS_RAW = [
+            '@import "../parent.css";',
+            '@import "child/dir.css";',
+            '@import "./sibling.css";',
+            '@import "../urls/also-sibling.css";',
+            ''
+        ].join('\n');
+        var SIMPLE_URLS_RAW = [
+            '.relatives { background: url(../../images/cousin.png); }',
+            '.offspring { background: url(./images/grandchild.png); }',
+            ''
+        ].join('\n');
+        var SIMPLE_RAW = SIMPLE_IMPORTS_RAW + SIMPLE_URLS_RAW;
+
+        function assertRequestSuccess(reqPath, done) {
+            request(BASE_URL + reqPath, function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(200);
+                done();
+            });
+        }
+
+        describe("route with fully-qualified dynamic path", function () {
+            var combined = combo.combine({
+                webRoot : COMPLEX_ROOT,
+                rootPath: COMPLEX_ROOT + '/versioned/:version/base/'
+            });
+
+            it("should read rootPath from filesystem directly", function (done) {
+                app.get("/c/:version/fs-fq", combined, function (req, res, next) {
+                    var rootPath = res.locals.rootPath;
+                    rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
+                    next();
+                }, combo.respond);
+
+                assertRequestSuccess("/c/deeper/fs-fq?js/a.js&js/b.js", done);
+            });
+
+            it("should resolve rootPath through symlink", function (done) {
+                app.get("/c/:version/ln-fq", combined, function (req, res, next) {
+                    var rootPath = res.locals.rootPath;
+                    rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/shallower/base/'));
+
+                    var relativePath = res.locals.relativePaths[0];
+                    relativePath.should.equal('js/a.js');
+
+                    fs.realpath(path.join(rootPath, relativePath), function (err, resolved) {
+                        assert.ifError(err);
+                        resolved.should.equal(path.join(COMPLEX_ROOT, '/base/', relativePath));
+                        next();
+                    });
+                }, combo.respond);
+
+                assertRequestSuccess("/c/shallower/ln-fq?js/a.js&js/b.js", done);
+            });
+
+            it("should only rewrite url() through symlink, not imports", function (done) {
+                app.get("/c/:version/fq-noimports", combined, function (req, res, next) {
+                    var rootPath = res.locals.rootPath;
+                    rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/shallower/base/'));
+
+                    var relativePath = res.locals.relativePaths[0];
+                    relativePath.should.equal('css/urls/simple.css');
+
+                    // console.error(res.body);
+                    var expected = (SIMPLE_IMPORTS_RAW + TEMPLATE_URLS_SIMPLE)
+                                    .replace(/__ROOT__/g, '/versioned/shallower/base/');
+                    res.body.should.equal(expected);
+
+                    next();
+                }, combo.respond);
+
+                assertRequestSuccess("/c/shallower/fq-noimports?css/urls/simple.css", done);
+            });
+        });
+
+        describe("route with one-sided dynamic path", function () {
+            describe("and rootPath symlinked shallower", function () {
+                var combined = combo.combine({
+                    rewriteImports: true,
+                    webRoot : COMPLEX_ROOT,
+                    rootPath: COMPLEX_ROOT + '/versioned/shallower/base/'
+                });
+
+                it("should resolve files from realpath in filesystem", function (done) {
+                    app.get("/c/:version/fs-shallow", combined, function (req, res, next) {
+                        var rootPath = res.locals.rootPath;
+                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/base/'));
+
+                        var relativePath = res.locals.relativePaths[0];
+                        relativePath.should.equal('js/a.js');
+
+                        fs.realpath(path.join(rootPath, relativePath), function (err, resolved) {
+                            assert.ifError(err);
+                            resolved.should.equal(path.join(COMPLEX_ROOT, '/base/', relativePath));
+                            next();
+                        });
+                    }, combo.respond);
+
+                    assertRequestSuccess("/c/cafebabe/fs-shallow?js/a.js&js/b.js", done);
+                });
+
+                it("should rewrite url() through symlink", function (done) {
+                    app.get("/c/:version/ln-shallow", combined, function (req, res, next) {
+                        var rootPath = res.locals.rootPath;
+                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/base/'));
+
+                        var relativePath = res.locals.relativePaths[0];
+                        relativePath.should.equal('css/urls/simple.css');
+
+                        // console.error(res.body);
+                        res.body.should.equal(TEMPLATE_SIMPLE.replace(/__ROOT__/g, '/base/'));
+
+                        next();
+                    }, combo.respond);
+
+                    assertRequestSuccess("/c/cafebabe/ln-shallow?css/urls/simple.css", done);
+                });
+            });
+
+            describe("and rootPath symlinked deeper", function () {
+                var combined = combo.combine({
+                    rewriteImports: true,
+                    webRoot : COMPLEX_ROOT,
+                    rootPath: COMPLEX_ROOT + '/deep-link/'
+                });
+
+                it("should read rootPath from filesystem directly", function (done) {
+                    app.get("/c/:version/fs-deeper", combined, function (req, res, next) {
+                        var rootPath = res.locals.rootPath;
+                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
+
+                        var relativePath = res.locals.relativePaths[0];
+                        relativePath.should.equal('js/a.js');
+
+                        next();
+                    }, combo.respond);
+
+                    assertRequestSuccess("/c/cafebabe/fs-deeper?js/a.js&js/b.js", done);
+                });
+
+                it("should *still* rewrite url() through symlink", function (done) {
+                    app.get("/c/:version/ln-deeper", combined, function (req, res, next) {
+                        var rootPath = res.locals.rootPath;
+                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
+
+                        var relativePath = res.locals.relativePaths[0];
+                        relativePath.should.equal('css/urls/simple.css');
+
+                        // console.error(res.body);
+                        var expected = TEMPLATE_SIMPLE
+                                        .replace(/__ROOT__/g, '/versioned/deeper/base/');
+                        res.body.should.equal(expected);
+
+                        next();
+                    }, combo.respond);
+
+                    assertRequestSuccess("/c/cafebabe/ln-deeper?css/urls/simple.css", done);
+                });
             });
         });
     });

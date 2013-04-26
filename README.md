@@ -120,7 +120,11 @@ app.listen(3000);
 
 #### `combo.respond`
 
-The `respond` method exported by `require('combohandler')` is a convenience method intended to be the last callback passed to an [express route](http://expressjs.com/api.html#app.VERB). Unless you have a *very* good reason to avoid it, you should probably use it. Here is the equivalent callback:
+The `respond` method exported by `require('combohandler')` is a convenience
+method intended to be the last callback passed to an
+[express route](http://expressjs.com/api.html#app.VERB).
+Unless you have a *very* good reason to avoid it, you should probably use it.
+Here is the equivalent callback:
 
 ```js
 function respond(req, res) {
@@ -128,13 +132,14 @@ function respond(req, res) {
 }
 ```
 
-This method may be extended in the future to do fancy things with optional combohandler middleware.
+This method may be extended in the future to do fancy things with optional
+combohandler middleware.
 
 ### Creating a server
 
 If you just want to get a server up and running quickly by specifying a mapping
-of routes to local root paths, use the `combohandler/lib/server` module. It
-creates a barebones Express server that will perform combo handling on the
+of routes to local root paths, use the `combohandler/lib/server` module.
+It creates a barebones Express server that will perform combo handling on the
 routes you specify:
 
 ```js
@@ -168,22 +173,28 @@ comboServer({
 
 ### From the command line
 
-If installed globally via `npm -g install`, the CLI executable `combohandler` is provided.
-If you're operating from a local clone, `npm link` in the repository root and you're off to the races.
-To start the default single-process server, it's as simple as
+If installed globally via `npm -g install`,
+the CLI executable `combohandler` is provided.
+If you're operating from a local clone,
+`npm link` in the repository root and you're off to the races.
+To start the default single-process server,
+it's as simple as
 
 ```bash
 combohandler
 # combohandler now running until you hit Ctrl+C
 ```
 
-Of course, the default output leaves something to be desired: that is to say, any output.
+Of course, the default output leaves something to be desired: that is to say,
+any output.
 
 #### Root Configuration
 
-At the very least, you need to provide some route-to-rootPath mappings for your CLI combohandler.
+At the very least,
+you need to provide some route-to-rootPath mappings for your CLI combohandler.
 
-When passed in the `--rootsFile` option, the JSON file contents should follow this pattern:
+When passed in the `--rootsFile` option,
+the JSON file contents should follow this pattern:
 
 ```json
 {
@@ -193,7 +204,8 @@ When passed in the `--rootsFile` option, the JSON file contents should follow th
 }
 ```
 
-When passed as individual `--root` parameters, the equivalent to the JSON above looks like this:
+When passed as individual `--root` parameters,
+the equivalent to the JSON above looks like this:
 
 ```bash
 combohandler --root /yui3:/local/path/to/yui3 [...]
@@ -221,7 +233,10 @@ Combine Options:
   -r, --root        String matching the pattern '{route}:{rootPath}'.
                         You may pass any number of unique --root configs.
   -f, --rootsFile   Path to JSON routes config, *exclusive* of --root.
-  -b, --basePath    Path to prepend when rewriting relative url()s.         ['']
+  -b, --basePath    URL path to prepend when rewriting relative url()s.     ['']
+  -w, --webRoot     Filesystem path to base rewritten relative url()s from. ['']
+                    Use this instead of --basePath when using route parameters.
+                    Overrides behaviour of --basePath.
   -m, --maxAge      'Cache-Control' and 'Expires' value, in seconds.  [31536000]
                     Set this to `0` to expire immediately, `null` to omit these
                     headers entirely.
@@ -249,7 +264,9 @@ Unlike the `--server` option, a path specified in this manner *must* be absolute
 
 ### Clustered!
 
-With the advent of `node` v0.8.x, the core `cluster` module is now usable, and `combohandler` now regains the capability it once had. Huzzah! said the villagers.
+With the advent of `node` v0.8.x, the core `cluster` module is now usable,
+and `combohandler` now regains the capability it once had.
+Huzzah! said the villagers.
 
 To run a clustered combohandler from the CLI, just add the `--cluster` flag:
 
@@ -257,7 +274,8 @@ To run a clustered combohandler from the CLI, just add the `--cluster` flag:
 combohandler --cluster --root /yui3:/path/to/yui3
 ```
 
-To clusterize combohandler from a module dependency, `combohandler/lib/cluster` is your friend:
+To clusterize combohandler from a module dependency,
+`combohandler/lib/cluster` is your friend:
 
 ```js
 var comboCluster = require('combohandler/lib/cluster');
@@ -278,8 +296,9 @@ Optional Middleware
 
 Because the combo handler changes the path from which CSS files are loaded,
 relative URLs in CSS files need to be updated to be relative to the
-combohandled path. Set the `basePath` configuration option to have the combo
-handler do this automatically.
+combohandled path.
+Set the `basePath` or `webRoot` configuration option to have the
+combohandler default middleware do this automatically.
 
 ```js
 // This static route can be used to load images and other assets that shouldn't
@@ -294,6 +313,12 @@ app.use('/public', express.static(__dirname + '/public'));
 app.get('/combo', combo.combine({
     rootPath: __dirname + '/public',
     basePath: '/public'
+}), combo.respond);
+
+// The equivalent config as the previous route, except using webRoot
+app.get('/combo', combo.combine({
+    rootPath: __dirname + '/public',
+    webRoot : __dirname
 }), combo.respond);
 ```
 
@@ -325,7 +350,7 @@ middleware options object.
 // Automagically
 app.get('/combo', combo.combine({
     rootPath: __dirname + '/public',
-    basePath: '/public',
+    webRoot : __dirname,
     rewriteImports: true
 }), combo.respond);
 
@@ -336,9 +361,21 @@ app.get('/combo',
     combo.respond);
 ```
 
+#### `basePath` or `webRoot`?
+
+In the simplest case,
+`basePath` and `webRoot` reach the same result from different directions.
+`basePath` allows you to rewrite a single well-known path under any root,
+whereas `webRoot` will handle any number of paths under a well-known root.
+
+In general, if you are using both optional middleware,
+you should prefer `webRoot` over `basePath`.
+
 ### Dynamic Paths via Route Parameters
 
-To enable resolution of dynamic subtree paths under a given `rootPath`, simply add a [route parameter](http://expressjs.com/api.html#req.params) to both the route and the `rootPath` config.
+To enable resolution of dynamic subtree paths under a given `rootPath`,
+simply add a [route parameter](http://expressjs.com/api.html#req.params)
+to both the route and the `rootPath` config.
 
 ```js
 app.get('/combo/yui/:version', combo.combine({
@@ -346,7 +383,10 @@ app.get('/combo/yui/:version', combo.combine({
 }), combo.respond);
 ```
 
-Given this config, any [YUI release tarball](http://yuilibrary.com/download/yui3/) you explode into a versioned subdirectory of `/local/path/to/yui/` would be available under a much shorter URL than the default config provides:
+Given this config,
+any [YUI release tarball](http://yuilibrary.com/download/yui3/) you explode
+into a versioned subdirectory of `/local/path/to/yui/` would be available
+under a much shorter URL than the default config provides:
 
 ```text
     http://example.com/combo/yui/3.9.1?yui/yui-min.js&yui-throttle/yui-throttle-min.js
@@ -354,7 +394,8 @@ Given this config, any [YUI release tarball](http://yuilibrary.com/download/yui3
     http://example.com/combo/yui?3.9.1/build/yui/yui-min.js&3.9.1/build/yui-throttle/yui-throttle-min.js
 ```
 
-If the built-in `dynamicPath` middleware is used manually, it _must_ be inserted *before* the default `combine` middleware.
+If the built-in `dynamicPath` middleware is used manually, it _must_ be
+inserted *before* the default `combine` middleware.
 
 
 Using as a YUI 3 combo handler

@@ -1,6 +1,19 @@
 Combo Handler History
 =====================
 
+0.3.2 (2013-04-26)
+------------------
+
+* Added --webRoot option to support CSS url() rewriting across multiple
+  dynamic paths. This option will supplant --basePath if both are present.
+
+* Changed dynamicPath resolution to use fs.stat() instead of fs.realpath(),
+  allowing symlinks under a well-known rootPath to build an "absolutely
+  relative" pathname instead of always resolving to the rootPath.
+
+* Reorganized tests to cut down on repetitive string concatenation and
+  clarify intention. Also added a bunch of complex symlink tests.
+
 0.3.1 (2013-04-24)
 ------------------
 
