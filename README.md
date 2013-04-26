@@ -297,7 +297,7 @@ Optional Middleware
 Because the combo handler changes the path from which CSS files are loaded,
 relative URLs in CSS files need to be updated to be relative to the
 combohandled path.
-Set the `basePath` configuration option to have the
+Set the `basePath` or `webRoot` configuration option to have the
 combohandler default middleware do this automatically.
 
 ```js
@@ -313,6 +313,12 @@ app.use('/public', express.static(__dirname + '/public'));
 app.get('/combo', combo.combine({
     rootPath: __dirname + '/public',
     basePath: '/public'
+}), combo.respond);
+
+// The equivalent config as the previous route, except using webRoot
+app.get('/combo', combo.combine({
+    rootPath: __dirname + '/public',
+    webRoot : __dirname
 }), combo.respond);
 ```
 
@@ -344,7 +350,7 @@ middleware options object.
 // Automagically
 app.get('/combo', combo.combine({
     rootPath: __dirname + '/public',
-    basePath: '/public',
+    webRoot : __dirname,
     rewriteImports: true
 }), combo.respond);
 
@@ -354,6 +360,16 @@ app.get('/combo',
     combo.cssUrls({ basePath: '/public', rewriteImports: true }),
     combo.respond);
 ```
+
+#### `basePath` or `webRoot`?
+
+In the simplest case,
+`basePath` and `webRoot` reach the same result from different directions.
+`basePath` allows you to rewrite a single well-known path under any root,
+whereas `webRoot` will handle any number of paths under a well-known root.
+
+In general, if you are using both optional middleware,
+you should prefer `webRoot` over `basePath`.
 
 ### Dynamic Paths via Route Parameters
 
