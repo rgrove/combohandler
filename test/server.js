@@ -501,7 +501,7 @@ describe('combohandler', function () {
                 combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
             combo.respond);
 
-            app.get('/no-config',
+            app.get('/dynamic-no-config',
                 combo.dynamicPath(),
                 combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
             combo.respond);
@@ -578,7 +578,7 @@ describe('combohandler', function () {
         });
 
         it("should not fail when config missing", function (done) {
-            request(BASE_URL + '/no-config?a.js&b.js', function (err, res, body) {
+            request(BASE_URL + '/dynamic-no-config?a.js&b.js', function (err, res, body) {
                 assert.ifError(err);
                 res.should.have.status(200);
                 res.should.have.header('content-type', 'application/javascript; charset=utf-8');
