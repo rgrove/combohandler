@@ -3,8 +3,9 @@ var path = require('path');
 var defaults = require('../lib/defaults');
 
 describe("defaults", function () {
-    var DEFAULT_PORT = parseInt(process.env.npm_package_config_port, 10);
-    var DEFAULT_SERVER = path.resolve(process.env.npm_package_config_server);
+    var DEFAULT_PORT = parseInt(process.env.npm_package_config_port, 10) || 8000;
+    var DEFAULT_SERVER = path.resolve(process.env.npm_package_config_server ||
+            path.resolve(__dirname,"../lib/server"));
 
     describe("for worker", function () {
         it("should include port", function () {
