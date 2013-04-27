@@ -1,6 +1,12 @@
 Combo Handler History
 =====================
 
+0.3.3 (2013-04-26)
+------------------
+
+* Fixed a naive regular expression that was preventing url() rewriting when
+  background property shorthand syntax was used.
+
 0.3.2 (2013-04-26)
 ------------------
 
