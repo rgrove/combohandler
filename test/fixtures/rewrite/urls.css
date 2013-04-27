@@ -1,3 +1,4 @@
+#shorthand { background: transparent left top no-repeat url(shorthand.png);}
 #no-quotes { background: url(no-quotes.png);}
 #single-quotes { background: url('single-quotes.png');}
 #double-quotes { background: url("double-quotes.png");}

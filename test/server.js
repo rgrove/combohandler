@@ -313,6 +313,7 @@ describe('combohandler', function () {
     // -- Optional Middleware --------------------------------------------------
     describe("url rewrites", function () {
         var TEMPLATE_URLS = [
+            "#shorthand { background: transparent left top no-repeat url(__PATH__shorthand.png);}",
             "#no-quotes { background: url(__PATH__no-quotes.png);}",
             "#single-quotes { background: url(\'__PATH__single-quotes.png\');}",
             "#double-quotes { background: url(\"__PATH__double-quotes.png\");}",
