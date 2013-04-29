@@ -16,21 +16,7 @@ if (options.cluster) {
     // Cluster support
     instance = require('../lib/cluster')(options);
 
-    if (options.restart) {
-        instance.restart();
-    }
-    else if (options.shutdown) {
-        instance.shutdown();
-    }
-    else if (options.status) {
-        instance.status();
-    }
-    else if (options.stop) {
-        instance.stop();
-    }
-    else {
-        instance.listen();
-    }
+    args.invoke(instance);
 } else {
     // Legacy support
     instance = require('../lib/server')(options);

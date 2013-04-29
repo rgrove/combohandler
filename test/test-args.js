@@ -3,7 +3,6 @@ var path = require('path');
 var args = require('../lib/args');
 
 describe("args", function () {
-
     describe("parse()", function () {
         it("should consume ad-hoc string 'restart' param as boolean config.restart", function () {
             var config = args.parse(['restart'], 0);
@@ -39,6 +38,40 @@ describe("args", function () {
             config.should.not.have.property('shutdown');
             config.should.not.have.property('status');
             config.stop.should.equal(true);
+        });
+
+        describe("with augmented knownOpts", function () {
+            args.knownOpts["ad-hoc-path"] = path;
+            args.knownOpts["ad-hoc-many"] = [String, Array];
+
+            it("should parse --ad-hoc-path as a resolved path", function () {
+                var config = args.parse(['--ad-hoc-path', './test/fixtures'], 0);
+
+                config.should.have.property('ad-hoc-path');
+                config['ad-hoc-path'].should.equal(path.resolve(__dirname, 'fixtures'));
+            });
+
+            it("should parse --ad-hoc-many as an array of strings", function () {
+                var config = args.parse([
+                    '--ad-hoc-many', 'foo',
+                    '--ad-hoc-many', 'bar',
+                    '--ad-hoc-many', 'baz'
+                ], 0);
+
+                config.should.have.property('ad-hoc-many');
+                config['ad-hoc-many'].should.eql(['foo', 'bar', 'baz']);
+            });
+        });
+
+        describe("with augmented shortHands", function () {
+            args.shortHands.foo = ["--ad-hoc-path", "./test/fixtures"];
+
+            it("should parse --foo as '--ad-hoc-path ./test/fixtures'", function () {
+                var config = args.parse(['--foo'], 0);
+
+                config.should.have.property('ad-hoc-path');
+                config['ad-hoc-path'].should.equal(path.resolve(__dirname, 'fixtures'));
+            });
         });
     });
 
@@ -143,5 +176,25 @@ describe("args", function () {
 
             gotVersion.should.equal(pkgVersion);
         });
+    });
+
+    describe("invoke()", function () {
+        function assertMethodCalled(methodName) {
+            return function (done) {
+                var instance = {
+                    options: {}
+                };
+                instance[methodName] = done;
+                instance.options[methodName] = true;
+
+                args.invoke(instance);
+            };
+        }
+
+        it("should call restart() when options.restart present",    assertMethodCalled("restart"));
+        it("should call shutdown() when options.shutdown present",  assertMethodCalled("shutdown"));
+        it("should call status() when options.status present",      assertMethodCalled("status"));
+        it("should call stop() when options.stop present",          assertMethodCalled("stop"));
+        it("should call listen() when no other options present",    assertMethodCalled("listen"));
     });
 });
