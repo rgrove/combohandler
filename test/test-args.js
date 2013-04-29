@@ -3,7 +3,6 @@ var path = require('path');
 var args = require('../lib/args');
 
 describe("args", function () {
-
     describe("parse()", function () {
         it("should consume ad-hoc string 'restart' param as boolean config.restart", function () {
             var config = args.parse(['restart'], 0);
@@ -143,5 +142,25 @@ describe("args", function () {
 
             gotVersion.should.equal(pkgVersion);
         });
+    });
+
+    describe("invoke()", function () {
+        function assertMethodCalled(methodName) {
+            return function (done) {
+                var instance = {
+                    options: {}
+                };
+                instance[methodName] = done;
+                instance.options[methodName] = true;
+
+                args.invoke(instance);
+            };
+        }
+
+        it("should call restart() when options.restart present",    assertMethodCalled("restart"));
+        it("should call shutdown() when options.shutdown present",  assertMethodCalled("shutdown"));
+        it("should call status() when options.status present",      assertMethodCalled("status"));
+        it("should call stop() when options.stop present",          assertMethodCalled("stop"));
+        it("should call listen() when no other options present",    assertMethodCalled("listen"));
     });
 });
