@@ -39,6 +39,40 @@ describe("args", function () {
             config.should.not.have.property('status');
             config.stop.should.equal(true);
         });
+
+        describe("with augmented knownOpts", function () {
+            args.knownOpts["ad-hoc-path"] = path;
+            args.knownOpts["ad-hoc-many"] = [String, Array];
+
+            it("should parse --ad-hoc-path as a resolved path", function () {
+                var config = args.parse(['--ad-hoc-path', './test/fixtures'], 0);
+
+                config.should.have.property('ad-hoc-path');
+                config['ad-hoc-path'].should.equal(path.resolve(__dirname, 'fixtures'));
+            });
+
+            it("should parse --ad-hoc-many as an array of strings", function () {
+                var config = args.parse([
+                    '--ad-hoc-many', 'foo',
+                    '--ad-hoc-many', 'bar',
+                    '--ad-hoc-many', 'baz'
+                ], 0);
+
+                config.should.have.property('ad-hoc-many');
+                config['ad-hoc-many'].should.eql(['foo', 'bar', 'baz']);
+            });
+        });
+
+        describe("with augmented shortHands", function () {
+            args.shortHands.foo = ["--ad-hoc-path", "./test/fixtures"];
+
+            it("should parse --foo as '--ad-hoc-path ./test/fixtures'", function () {
+                var config = args.parse(['--foo'], 0);
+
+                config.should.have.property('ad-hoc-path');
+                config['ad-hoc-path'].should.equal(path.resolve(__dirname, 'fixtures'));
+            });
+        });
     });
 
     describe("clean()", function () {
