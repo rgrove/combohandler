@@ -1,6 +1,14 @@
 Combo Handler History
 =====================
 
+0.3.4 (2013-04-29)
+------------------
+
+* Encapsulated option-based instance CLI behaviour with args.invoke().
+
+* Exposed CLI option config on the exported object to allow ad-hoc
+  customization for those that `require('combohandler/lib/args')`.
+
 0.3.3 (2013-04-26)
 ------------------
 
