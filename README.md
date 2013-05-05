@@ -98,15 +98,7 @@ app.configure(function () {
 });
 
 // Return a 400 response if the combo handler generates a BadRequest error.
-app.use(function (err, req, res, next) {
-    if (err instanceof combo.BadRequest) {
-        res.charset = 'utf-8';
-        res.type('text/plain');
-        res.send(400, 'Bad request. ' + err.message);
-    } else {
-        next(err);
-    }
-});
+app.use(combo.errorHandler);
 
 // Given a root path that points to a YUI 3 root folder, this route will
 // handle URLs like:
