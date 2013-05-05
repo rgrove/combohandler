@@ -16,7 +16,7 @@ process.env['NODE_ENV'] = 'test';
 describe('combohandler', function () {
     var app, httpServer;
 
-    before(function () {
+    before(function (done) {
         app = server({
             roots: {
                 '/css': __dirname + '/fixtures/root/css',
@@ -24,11 +24,11 @@ describe('combohandler', function () {
             }
         });
 
-        httpServer = app.listen(PORT);
+        httpServer = app.listen(PORT, done);
     });
 
-    after(function () {
-        httpServer.close();
+    after(function (done) {
+        httpServer.close(done);
     });
 
     it("should return an array of middleware callbacks when invoked", function () {
