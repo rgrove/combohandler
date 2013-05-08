@@ -98,7 +98,7 @@ app.configure(function () {
 });
 
 // Return a 400 response if the combo handler generates a BadRequest error.
-app.use(combo.errorHandler);
+app.use(combo.errorHandler());
 
 // Given a root path that points to a YUI 3 root folder, this route will
 // handle URLs like:
@@ -126,6 +126,26 @@ function respond(req, res) {
 
 This method may be extended in the future to do fancy things with optional
 combohandler middleware.
+
+#### `combo.errorHandler`
+
+The `errorHandler` export encapsulates the convention of sending `BadRequest`
+errors with an optional `errorMaxAge` config.
+By default, `BadRequest` errors are served with a 5 minute `max-age` header.
+
+To explicitly disable caching (via
+`Pragma: no-cache` and
+`Cache-Control: private,no-store`
+headers), pass `null` in the options object:
+
+```js
+app.use(combo.errorHandler({
+    errorMaxAge: null
+}));
+```
+
+Any other value (including zero) for `errorMaxAge` is interpreted as the
+desired duration in seconds.
 
 ### Creating a server
 
