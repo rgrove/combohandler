@@ -28,7 +28,7 @@ describe("cluster worker", function () {
 
         it("should bind dispatcher to process", function () {
             var instance = new ComboWorker();
-            var msgListeners = process.listeners('message').slice();
+            var msgListeners = instance.process.listeners('message').slice();
             var dispatcherIndex = msgListeners.indexOf(instance._boundDispatch);
 
             instance.should.have.property('_boundDispatch');
@@ -56,7 +56,7 @@ describe("cluster worker", function () {
             var instance = new ComboWorker();
 
             instance.destroy(function () {
-                var msgListeners = process.listeners('message').slice();
+                var msgListeners = instance.process.listeners('message').slice();
                 var dispatcherIndex = msgListeners.indexOf(instance._boundDispatch);
 
                 dispatcherIndex.should.equal(-1);

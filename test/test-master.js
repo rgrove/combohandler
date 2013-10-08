@@ -8,7 +8,6 @@ var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
 
 describe("cluster master", function () {
-    var cluster = require('cluster');
     var PIDS_DIR = 'test/fixtures/pids';
 
     after(cleanPidsDir);
@@ -62,12 +61,12 @@ describe("cluster master", function () {
 
             instance._attachEvents();
 
-            hasAttachedClusterEvents();
-            hasAttachedSignalEvents();
+            hasAttachedClusterEvents(instance);
+            hasAttachedSignalEvents(instance);
 
             instance.destroy(function () {
-                hasDetachedClusterEvents();
-                hasDetachedSignalEvents();
+                hasDetachedClusterEvents(instance);
+                hasDetachedSignalEvents(instance);
 
                 done();
             });
@@ -77,10 +76,10 @@ describe("cluster master", function () {
             var instance = new ComboMaster();
 
             instance._bindProcess();
-            hasAttachedSignalEvents();
+            hasAttachedSignalEvents(instance);
 
             instance.destroy();
-            hasDetachedSignalEvents();
+            hasDetachedSignalEvents(instance);
         });
     });
 
@@ -117,14 +116,14 @@ describe("cluster master", function () {
 
         it("should attach signal events", function (done) {
             master.emit('start', function () {
-                hasAttachedSignalEvents();
+                hasAttachedSignalEvents(master);
                 done();
             });
         });
 
         it("should attach cluster events", function (done) {
             master.emit('start', function () {
-                hasAttachedClusterEvents();
+                hasAttachedClusterEvents(master);
                 done();
             });
         });
@@ -317,32 +316,32 @@ describe("cluster master", function () {
 
     // Test Utilities ---------------------------------------------------------
 
-    function hasAttachedClusterEvents() {
-        cluster.listeners('fork'        ).should.have.length(1);
-        cluster.listeners('online'      ).should.have.length(1);
-        cluster.listeners('listening'   ).should.have.length(1);
-        cluster.listeners('disconnect'  ).should.have.length(1);
-        cluster.listeners('exit'        ).should.have.length(1);
+    function hasAttachedClusterEvents(instance) {
+        instance.cluster.listeners('fork'        ).should.have.length(1);
+        instance.cluster.listeners('online'      ).should.have.length(1);
+        instance.cluster.listeners('listening'   ).should.have.length(1);
+        instance.cluster.listeners('disconnect'  ).should.have.length(1);
+        instance.cluster.listeners('exit'        ).should.have.length(1);
     }
 
-    function hasDetachedClusterEvents() {
-        cluster.listeners('fork'        ).should.be.empty;
-        cluster.listeners('online'      ).should.be.empty;
-        cluster.listeners('listening'   ).should.be.empty;
-        cluster.listeners('disconnect'  ).should.be.empty;
-        cluster.listeners('exit'        ).should.be.empty;
+    function hasDetachedClusterEvents(instance) {
+        instance.cluster.listeners('fork'        ).should.be.empty;
+        instance.cluster.listeners('online'      ).should.be.empty;
+        instance.cluster.listeners('listening'   ).should.be.empty;
+        instance.cluster.listeners('disconnect'  ).should.be.empty;
+        instance.cluster.listeners('exit'        ).should.be.empty;
     }
 
-    function hasAttachedSignalEvents() {
-        process.listeners('SIGINT' ).should.have.length(1);
-        process.listeners('SIGTERM').should.have.length(1);
-        process.listeners('SIGUSR2').should.have.length(1);
+    function hasAttachedSignalEvents(instance) {
+        instance.process.listeners('SIGINT' ).should.have.length(1);
+        instance.process.listeners('SIGTERM').should.have.length(1);
+        instance.process.listeners('SIGUSR2').should.have.length(1);
     }
 
-    function hasDetachedSignalEvents() {
-        process.listeners('SIGINT' ).should.be.empty;
-        process.listeners('SIGTERM').should.be.empty;
-        process.listeners('SIGUSR2').should.be.empty;
+    function hasDetachedSignalEvents(instance) {
+        instance.process.listeners('SIGINT' ).should.be.empty;
+        instance.process.listeners('SIGTERM').should.be.empty;
+        instance.process.listeners('SIGUSR2').should.be.empty;
     }
 
     function cleanPidsDir(done) {
