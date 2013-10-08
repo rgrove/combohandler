@@ -4,6 +4,7 @@ var path = require('path');
 var ComboBase = require('../lib/cluster/base');
 
 describe("cluster base", function () {
+    /*jshint expr:true */
 
     describe("instantiation", function () {
         it("should support empty options arg", function () {

@@ -3,6 +3,8 @@ var path = require('path');
 var defaults = require('../lib/defaults');
 
 describe("defaults", function () {
+    /*jshint expr:true */
+
     var DEFAULT_PORT = parseInt(process.env.npm_package_config_port, 10) || 8000;
     var DEFAULT_SERVER = path.resolve(process.env.npm_package_config_server ||
             path.resolve(__dirname,"../lib/server"));
@@ -51,6 +53,7 @@ describe("defaults", function () {
         before(function () {
             _npmConfigPrefix = process.env.npm_config_prefix;
 
+            /*jshint laxbreak:true */
             // invert the conditional already tested above
             invertedPrefix = process.env.npm_config_prefix = _npmConfigPrefix
                 ? ""

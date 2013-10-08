@@ -8,6 +8,8 @@ var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
 
 describe("cluster master", function () {
+    /*jshint expr:true */
+
     var PIDS_DIR = 'test/fixtures/pids';
 
     after(cleanPidsDir);

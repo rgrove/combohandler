@@ -4,6 +4,8 @@ var ComboBase = require('../lib/cluster/base');
 var ComboWorker = require('../lib/cluster/worker');
 
 describe("cluster worker", function () {
+    /*jshint expr:true */
+
     describe("instantiation", function () {
         it("should support empty options arg with correct defaults", function () {
             var instance = new ComboWorker();
