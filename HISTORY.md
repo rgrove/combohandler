@@ -1,6 +1,19 @@
 Combo Handler History
 =====================
 
+0.3.5 (2013-10-08)
+------------------
+
+* Added `errorHandler` middleware to main export, encapsulating a convenient
+  way to cache error responses for a different duration than normal responses.
+
+* Ensured that Unicode BOM in the response is removed, if found.
+  [elementstorm]
+
+* Fixed tests in `node` v0.11.x,  adding jshint and sinon to `devDependencies`.
+
+* Updated express dependency to 3.3.x. [Eric Ferraiuolo]
+
 0.3.4 (2013-04-29)
 ------------------
 
