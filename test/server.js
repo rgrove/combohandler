@@ -13,6 +13,8 @@ var combo   = require('../'),
 
 process.env.NODE_ENV = 'test';
 
+var FIXTURES_DIR = __dirname + '/fixtures';
+
 describe('combohandler', function () {
     /*jshint expr:true */
 
@@ -21,8 +23,8 @@ describe('combohandler', function () {
     before(function (done) {
         app = server({
             roots: {
-                '/css': __dirname + '/fixtures/root/css',
-                '/js' : __dirname + '/fixtures/root/js'
+                '/css': FIXTURES_DIR + '/root/css',
+                '/js' : FIXTURES_DIR + '/root/js'
             }
         });
 
@@ -77,12 +79,12 @@ describe('combohandler', function () {
     describe('config: maxAge', function () {
         before(function () {
             app.get('/max-age-null', combo.combine({
-                rootPath: __dirname + '/fixtures/root/js',
+                rootPath: FIXTURES_DIR + '/root/js',
                 maxAge  : null
             }), combo.respond);
 
             app.get('/max-age-0', combo.combine({
-                rootPath: __dirname + '/fixtures/root/js',
+                rootPath: FIXTURES_DIR + '/root/js',
                 maxAge  : 0
             }), combo.respond);
         });
@@ -232,7 +234,7 @@ describe('combohandler', function () {
 
         describe('with route parameters', function () {
             it("should prepend dynamicPath middleware to callbacks", function () {
-                var callbacks = combo.combine({ rootPath: __dirname + '/fixtures/:root/js' });
+                var callbacks = combo.combine({ rootPath: FIXTURES_DIR + '/:root/js' });
                 callbacks.should.have.lengthOf(2);
                 callbacks[0].name.should.equal('dynamicPathMiddleware');
             });
@@ -247,11 +249,11 @@ describe('combohandler', function () {
                 poo.stack = null; // silence irrelevant output
                 next(poo);
             }, combo.combine({
-                rootPath: __dirname + '/fixtures/root/js'
+                rootPath: FIXTURES_DIR + '/root/js'
             }), combo.respond);
 
             app.get('/error-throw?', combo.combine({
-                rootPath: __dirname + '/fixtures/root/js'
+                rootPath: FIXTURES_DIR + '/root/js'
             }), function (req, res, next) {
                 throw 'poo';
             }, combo.respond);
@@ -433,48 +435,48 @@ describe('combohandler', function () {
 
         before(function () {
             app.get('/norewrite', combo.combine({
-                rootPath: __dirname + '/fixtures/rewrite'
+                rootPath: FIXTURES_DIR + '/rewrite'
             }), combo.respond);
 
             app.get('/rewrite', combo.combine({
-                rootPath: __dirname + '/fixtures/rewrite',
+                rootPath: FIXTURES_DIR + '/rewrite',
                 basePath: "/rewritten/"
             }), combo.respond);
 
             app.get('/rewrite-noslash', combo.combine({
-                rootPath: __dirname + '/fixtures/rewrite',
+                rootPath: FIXTURES_DIR + '/rewrite',
                 basePath: "/rewritten"
             }), combo.respond);
 
             app.get('/rewrite-imports', combo.combine({
-                rootPath: __dirname + '/fixtures/rewrite',
+                rootPath: FIXTURES_DIR + '/rewrite',
                 basePath: "/rewritten/",
                 rewriteImports: true
             }), combo.respond);
 
             app.get('/rewrite-middleware-before-combine',
                 combo.cssUrls({ basePath: "/rewritten/" }),
-                combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+                combo.combine({ rootPath: FIXTURES_DIR + '/rewrite' }),
             combo.respond);
 
             app.get('/rewrite-middleware-noconfig',
-                combo.combine({ rootPath: __dirname + '/fixtures/rewrite' }),
+                combo.combine({ rootPath: FIXTURES_DIR + '/rewrite' }),
                 combo.cssUrls(),
             combo.respond);
 
             app.get('/rewrite-root', combo.combine({
-                rootPath: __dirname + '/fixtures/rewrite',
-                webRoot:  __dirname + '/fixtures/'
+                rootPath: FIXTURES_DIR + '/rewrite',
+                webRoot:  FIXTURES_DIR + '/'
             }), combo.respond);
 
             app.get('/rewrite-root-noslash', combo.combine({
-                rootPath: __dirname + '/fixtures/rewrite',
-                webRoot:  __dirname + '/fixtures'
+                rootPath: FIXTURES_DIR + '/rewrite',
+                webRoot:  FIXTURES_DIR
             }), combo.respond);
 
             app.get('/rewrite-root-imports', combo.combine({
-                rootPath: __dirname + '/fixtures/rewrite',
-                webRoot:  __dirname + '/fixtures/',
+                rootPath: FIXTURES_DIR + '/rewrite',
+                webRoot:  FIXTURES_DIR + '/',
                 rewriteImports: true
             }), combo.respond);
         });
@@ -547,35 +549,35 @@ describe('combohandler', function () {
     describe("dynamic paths", function () {
         before(function () {
             app.get('/dynamic/:version',
-                combo.combine({ rootPath: __dirname + '/fixtures/dynamic/:version' }),
+                combo.combine({ rootPath: FIXTURES_DIR + '/dynamic/:version' }),
             combo.respond);
 
             app.get('/:version/param-first',
-                combo.combine({ rootPath: __dirname + '/fixtures/dynamic/:version' }),
+                combo.combine({ rootPath: FIXTURES_DIR + '/dynamic/:version' }),
             combo.respond);
 
             app.get('/dynamic/:version/empty-combo',
-                combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/:version/static' }),
+                combo.dynamicPath({ rootPath: FIXTURES_DIR + '/dynamic/:version/static' }),
                 combo.combine(),
             combo.respond);
 
             app.get('/dynamic/:version/doubled',
-                combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/:version/static' }),
-                combo.combine({     rootPath: __dirname + '/fixtures/dynamic/:version/static' }),
+                combo.dynamicPath({ rootPath: FIXTURES_DIR + '/dynamic/:version/static' }),
+                combo.combine({     rootPath: FIXTURES_DIR + '/dynamic/:version/static' }),
             combo.respond);
 
             app.get('/non-dynamic',
-                combo.dynamicPath({ rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
-                combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
+                combo.dynamicPath({ rootPath: FIXTURES_DIR + '/dynamic/decafbad' }),
+                combo.combine({     rootPath: FIXTURES_DIR + '/dynamic/decafbad' }),
             combo.respond);
 
             app.get('/dynamic-no-config',
                 combo.dynamicPath(),
-                combo.combine({     rootPath: __dirname + '/fixtures/dynamic/decafbad' }),
+                combo.combine({     rootPath: FIXTURES_DIR + '/dynamic/decafbad' }),
             combo.respond);
 
             app.get('/route-only/:version/lib',
-                combo.combine({ rootPath: __dirname + '/fixtures/root' }),
+                combo.combine({ rootPath: FIXTURES_DIR + '/root' }),
             combo.respond);
         });
 
@@ -680,7 +682,7 @@ describe('combohandler', function () {
     // -- Complex Integration --------------------------------------------------
     describe("complex", function () {
         // Strange things may happen when you mix symlinks, parameters, and complex routes
-        var COMPLEX_ROOT = __dirname + '/fixtures/complex';
+        var COMPLEX_ROOT = FIXTURES_DIR + '/complex';
 
         var TEMPLATE_IMPORTS_SIMPLE = [
             '@import "__ROOT__css/parent.css";',
