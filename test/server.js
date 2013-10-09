@@ -148,7 +148,8 @@ describe('combohandler', function () {
                 res.should.have.status(400);
                 res.should.have.header('cache-control', 'public,max-age=300');
 
-                var expires = new Date(res.headers['expires']);
+                res.headers.should.have.property('expires');
+                var expires = new Date(res.headers.expires);
                 ((expires - Date.now()) / 1000).should.be.within(290, 300);
 
                 done();
@@ -163,7 +164,7 @@ describe('combohandler', function () {
                 res.should.have.header('pragma', 'no-cache');
 
                 res.headers.should.have.property('expires');
-                var expires = new Date(res.headers['expires']).getTime();
+                var expires = new Date(res.headers.expires).getTime();
                 expires.should.equal(new Date(0).getTime());
 
                 done();
@@ -176,7 +177,8 @@ describe('combohandler', function () {
                 res.should.have.status(400);
                 res.should.have.header('cache-control', 'public,max-age=0');
 
-                var expires = new Date(res.headers['expires']);
+                res.headers.should.have.property('expires');
+                var expires = new Date(res.headers.expires);
                 ((expires - Date.now()) / 1000).should.be.within(-5, 5);
 
                 done();
