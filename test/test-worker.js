@@ -1,9 +1,11 @@
-/*global describe, it */
+/*global describe, it, sinon */
 
 var ComboBase = require('../lib/cluster/base');
 var ComboWorker = require('../lib/cluster/worker');
 
 describe("cluster worker", function () {
+    /*jshint expr:true */
+
     describe("instantiation", function () {
         it("should support empty options arg with correct defaults", function () {
             var instance = new ComboWorker();
@@ -28,7 +30,7 @@ describe("cluster worker", function () {
 
         it("should bind dispatcher to process", function () {
             var instance = new ComboWorker();
-            var msgListeners = process.listeners('message').slice();
+            var msgListeners = instance.process.listeners('message').slice();
             var dispatcherIndex = msgListeners.indexOf(instance._boundDispatch);
 
             instance.should.have.property('_boundDispatch');
@@ -56,7 +58,7 @@ describe("cluster worker", function () {
             var instance = new ComboWorker();
 
             instance.destroy(function () {
-                var msgListeners = process.listeners('message').slice();
+                var msgListeners = instance.process.listeners('message').slice();
                 var dispatcherIndex = msgListeners.indexOf(instance._boundDispatch);
 
                 dispatcherIndex.should.equal(-1);

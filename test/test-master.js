@@ -1,4 +1,4 @@
-/*global describe, before, after, beforeEach, afterEach, it */
+/*global describe, before, after, beforeEach, afterEach, it, sinon */
 var fs = require('fs');
 var path = require('path');
 var rimraf = require('rimraf');
@@ -8,7 +8,8 @@ var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
 
 describe("cluster master", function () {
-    var cluster = require('cluster');
+    /*jshint expr:true */
+
     var PIDS_DIR = 'test/fixtures/pids';
 
     after(cleanPidsDir);
@@ -56,77 +57,103 @@ describe("cluster master", function () {
         });
     });
 
-    describe("on 'destroy'", function () {
-        it("should detach events, passing through callback", function (done) {
-            var instance = new ComboMaster();
-
-            instance._attachEvents();
-
-            hasAttachedClusterEvents();
-            hasAttachedSignalEvents();
-
-            instance.destroy(function () {
-                hasDetachedClusterEvents();
-                hasDetachedSignalEvents();
-
-                done();
-            });
-        });
-
-        it("should not error when detachEvents callback missing", function () {
-            var instance = new ComboMaster();
-
-            instance._bindProcess();
-            hasAttachedSignalEvents();
-
-            instance.destroy();
-            hasDetachedSignalEvents();
-        });
-    });
-
     describe("on 'start'", function () {
-        var master;
-
         before(cleanPidsDir);
 
-        beforeEach(function (done) {
-            master = new ComboMaster({
+        beforeEach(function () {
+            var instance = new ComboMaster({
                 pids: PIDS_DIR
-            }, done);
+            });
+
+            sinon.spy(instance.cluster, "on");
+            sinon.spy(instance.process, "on");
+
+            this.instance = instance;
         });
 
-        afterEach(function (done) {
-            master.destroy(done);
+        afterEach(function () {
+            var instance = this.instance;
+
+            instance.cluster.on.restore();
+            instance.process.on.restore();
+
+            instance.emit('cleanup');
+            this.instance = instance = null;
         });
 
         after(cleanPidsDir);
 
         it("should setupMaster with exec config", function (done) {
-            master.setupMaster = function (options) {
+            var instance = this.instance;
+            instance.setupMaster = function (options) {
                 options.should.have.property('exec');
                 options.exec.should.equal(path.resolve(__dirname, '../lib/cluster/worker.js'));
             };
-            master.emit('start', done);
+            instance.start(done);
         });
 
         it("should create master.pid", function (done) {
-            master.emit('start', function () {
-                fs.readFile(path.join(master.options.pids, 'master.pid'), done);
+            var instance = this.instance;
+            instance.start(function () {
+                fs.readFile(path.join(instance.options.pids, 'master.pid'), done);
             });
         });
 
-        it("should attach signal events", function (done) {
-            master.emit('start', function () {
-                hasAttachedSignalEvents();
+        it("should attach cluster and process events", function (done) {
+            var instance = this.instance;
+            instance.start(function () {
+                verifyCluster(instance.cluster.on);
+                verifyProcess(instance.process.on);
+
                 done();
             });
         });
+    });
 
-        it("should attach cluster events", function (done) {
-            master.emit('start', function () {
-                hasAttachedClusterEvents();
+    describe("on 'destroy'", function () {
+        beforeEach(function () {
+            var instance = new ComboMaster();
+
+            sinon.spy(instance.cluster, "removeListener");
+            sinon.spy(instance.process, "removeListener");
+
+            sinon.stub(instance.cluster, "disconnect");
+            this.instance = instance;
+        });
+
+        afterEach(function () {
+            var instance = this.instance;
+
+            instance.cluster.removeListener.restore();
+            instance.process.removeListener.restore();
+
+            instance.cluster.disconnect.restore();
+            this.instance = instance = null;
+        });
+
+        it("should detach cluster and process events", function (done) {
+            var instance = this.instance;
+            instance.start();
+
+            instance.destroy(function () {
+                verifyCluster(instance.cluster.removeListener);
+                verifyProcess(instance.process.removeListener);
+
                 done();
             });
+
+            instance.cluster.disconnect.invokeCallback();
+        });
+
+        it("should not error when destroy callback missing", function () {
+            var instance = this.instance;
+
+            /*jshint immed:false */
+            (function () {
+                instance.destroy();
+            }).should.not.throwError();
+
+            instance.cluster.disconnect.invokeCallback();
         });
     });
 
@@ -317,32 +344,26 @@ describe("cluster master", function () {
 
     // Test Utilities ---------------------------------------------------------
 
-    function hasAttachedClusterEvents() {
-        cluster.listeners('fork'        ).should.have.length(1);
-        cluster.listeners('online'      ).should.have.length(1);
-        cluster.listeners('listening'   ).should.have.length(1);
-        cluster.listeners('disconnect'  ).should.have.length(1);
-        cluster.listeners('exit'        ).should.have.length(1);
+    function verifyCluster(spyCluster) {
+        spyCluster.callCount.should.equal(5);
+
+        spyCluster.getCall(0).calledWith('fork',       sinon.match.func).should.be.ok;
+        spyCluster.getCall(1).calledWith('online',     sinon.match.func).should.be.ok;
+        spyCluster.getCall(2).calledWith('listening',  sinon.match.func).should.be.ok;
+        spyCluster.getCall(3).calledWith('disconnect', sinon.match.func).should.be.ok;
+        spyCluster.getCall(4).calledWith('exit',       sinon.match.func).should.be.ok;
+
+        return spyCluster;
     }
 
-    function hasDetachedClusterEvents() {
-        cluster.listeners('fork'        ).should.be.empty;
-        cluster.listeners('online'      ).should.be.empty;
-        cluster.listeners('listening'   ).should.be.empty;
-        cluster.listeners('disconnect'  ).should.be.empty;
-        cluster.listeners('exit'        ).should.be.empty;
-    }
+    function verifyProcess(spyProcess) {
+        spyProcess.callCount.should.equal(3);
 
-    function hasAttachedSignalEvents() {
-        process.listeners('SIGINT' ).should.have.length(1);
-        process.listeners('SIGTERM').should.have.length(1);
-        process.listeners('SIGUSR2').should.have.length(1);
-    }
+        spyProcess.getCall(0).calledWith('SIGINT',     sinon.match.func).should.be.ok;
+        spyProcess.getCall(1).calledWith('SIGTERM',    sinon.match.func).should.be.ok;
+        spyProcess.getCall(2).calledWith('SIGUSR2',    sinon.match.func).should.be.ok;
 
-    function hasDetachedSignalEvents() {
-        process.listeners('SIGINT' ).should.be.empty;
-        process.listeners('SIGTERM').should.be.empty;
-        process.listeners('SIGUSR2').should.be.empty;
+        return spyProcess;
     }
 
     function cleanPidsDir(done) {

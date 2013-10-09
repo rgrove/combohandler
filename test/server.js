@@ -1,4 +1,4 @@
-/*global describe, before, after, it */
+/*global describe, before, after, it, sinon */
 var fs = require('fs');
 var path = require('path');
 
@@ -11,9 +11,11 @@ var combo   = require('../'),
     PORT     = 8942,
     BASE_URL = 'http://localhost:' + PORT;
 
-process.env['NODE_ENV'] = 'test';
+process.env.NODE_ENV = 'test';
 
 describe('combohandler', function () {
+    /*jshint expr:true */
+
     var app, httpServer;
 
     before(function (done) {
@@ -91,7 +93,8 @@ describe('combohandler', function () {
                 res.should.have.status(200);
                 res.should.have.header('cache-control', 'public,max-age=31536000');
 
-                var expires = new Date(res.headers['expires']);
+                res.headers.should.have.property('expires');
+                var expires = new Date(res.headers.expires);
                 ((expires - Date.now()) / 1000).should.be.within(31535990, 31536000);
 
                 done();
@@ -114,7 +117,8 @@ describe('combohandler', function () {
                 res.should.have.status(200);
                 res.should.have.header('cache-control', 'public,max-age=0');
 
-                var expires = new Date(res.headers['expires']);
+                res.headers.should.have.property('expires');
+                var expires = new Date(res.headers.expires);
                 ((expires - Date.now()) / 1000).should.be.within(-5, 5);
 
                 done();

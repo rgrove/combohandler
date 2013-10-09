@@ -1,8 +1,10 @@
-/*global describe, it */
+/*global describe, it, sinon */
 var path = require('path');
 var args = require('../lib/args');
 
 describe("args", function () {
+    /*jshint expr:true */
+
     describe("parse()", function () {
         it("should consume ad-hoc string 'restart' param as boolean config.restart", function () {
             var config = args.parse(['restart'], 0);

@@ -1,9 +1,10 @@
-/*global describe, it */
+/*global describe, it, sinon */
 var path = require('path');
 
 var ComboBase = require('../lib/cluster/base');
 
 describe("cluster base", function () {
+    /*jshint expr:true */
 
     describe("instantiation", function () {
         it("should support empty options arg", function () {
@@ -60,24 +61,6 @@ describe("cluster base", function () {
 
             instance.should.have.property('_destroyed');
             instance._destroyed.should.equal(true);
-        });
-
-        it("should remove all instance listeners", function () {
-            var instance = new ComboBase();
-
-            instance.on('start', function () {});
-            instance.on('listen', function () {});
-            instance.on('destroy', function () {});
-
-            instance.listeners('start').should.not.be.empty;
-            instance.listeners('listen').should.not.be.empty;
-            instance.listeners('destroy').should.not.be.empty;
-
-            instance.destroy();
-
-            instance.listeners('start').should.be.empty;
-            instance.listeners('listen').should.be.empty;
-            instance.listeners('destroy').should.be.empty;
         });
 
         it("should call destroy callback directly when no listener for 'destroy' event", function (done) {
