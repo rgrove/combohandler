@@ -1,4 +1,4 @@
-/*global describe, before, after, it */
+/*global describe, before, after, it, sinon */
 var path = require('path');
 var defaults = require('../lib/defaults');
 

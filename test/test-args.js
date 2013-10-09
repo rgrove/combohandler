@@ -1,4 +1,4 @@
-/*global describe, it */
+/*global describe, it, sinon */
 var path = require('path');
 var args = require('../lib/args');
 

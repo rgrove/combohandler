@@ -1,4 +1,4 @@
-/*global describe, before, after, it */
+/*global describe, before, after, it, sinon */
 var fs = require('fs');
 var path = require('path');
 

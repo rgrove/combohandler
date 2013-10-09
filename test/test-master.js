@@ -1,4 +1,4 @@
-/*global describe, before, after, beforeEach, afterEach, it */
+/*global describe, before, after, beforeEach, afterEach, it, sinon */
 var fs = require('fs');
 var path = require('path');
 var rimraf = require('rimraf');

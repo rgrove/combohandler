@@ -1,4 +1,4 @@
-/*global describe, it */
+/*global describe, it, sinon */
 
 var ComboBase = require('../lib/cluster/base');
 var ComboWorker = require('../lib/cluster/worker');
