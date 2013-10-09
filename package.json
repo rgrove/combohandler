@@ -1,7 +1,7 @@
 {
     "name"       : "combohandler",
     "description": "Simple Yahoo!-style combo handler.",
-    "version"    : "0.3.4",
+    "version"    : "0.3.5",
     "keywords"   : [
         "combo", "combohandler", "combohandle", "combine", "cdn", "css", "yui"
     ],
