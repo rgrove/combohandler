@@ -378,52 +378,15 @@ describe('combohandler', function () {
 
     // -- Optional Middleware --------------------------------------------------
     describe("url rewrites", function () {
-        var TEMPLATE_URLS = [
-            "#shorthand { background: transparent left top no-repeat url(__PATH__shorthand.png);}",
-            "#no-quotes { background: url(__PATH__no-quotes.png);}",
-            "#single-quotes { background: url(\'__PATH__single-quotes.png\');}",
-            "#double-quotes { background: url(\"__PATH__double-quotes.png\");}",
-            "#spaces { background: url(",
-            "  \"__PATH__spaces.png\" );}",
-            "#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}",
-            "#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-            "#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}",
-            "#escaped-stuff { background:url(\"__PATH__\\)\\\";\\'\\(.png\"); }",
-            ".unicode-raw { background: url(__PATH__déchaîné.png); }",
-            // NOTE: we do not currently support the space terminator for CSS escapes.
-            // ".unicode-escaped { background: url(__PATH__d\\E9 cha\\EEn\\E9.png); }",
-            ".unicode-escaped { background: url(__PATH__d\\0000E9cha\\EEn\\E9.png); }",
-            ".nl-craziness { background:",
-            "    url(__PATH__crazy.png",
-            "    ); }",
-            ""
-        ].join("\n");
+        // NOTE: we do not currently support the space terminator for CSS escapes.
+        // ".unicode-escaped { background: url(__PATH__d\\E9 cha\\EEn\\E9.png); }",
+        var TEMPLATE_URLS = fs.readFileSync(path.join(FIXTURES_DIR, 'rewrite/urls.tmpl'), 'utf-8');
+        var TEMPLATE_MORE = fs.readFileSync(path.join(FIXTURES_DIR, 'rewrite/deeper/more.tmpl'), 'utf-8');
+        // TODO: are "../" paths being rewritten correctly?
+        var TEMPLATE_IMPORTS = fs.readFileSync(path.join(FIXTURES_DIR, 'rewrite/imports.tmpl'), 'utf-8');
 
-        var TEMPLATE_MORE = [
-            "#depth { background: url(__PATH__deeper/deeper.png);}",
-            "#up-one { background: url(__PATH__shallower.png);}",
-            "#down-one { background: url(__PATH__deeper/more/down-one.png);}"
-        ].join("\n");
-
-        var TEMPLATE_IMPORTS = [
-            "@import '__PATH__basic-sq.css';",
-            "@import \"__PATH__basic-dq.css\";",
-            "@import url(__PATH__url-uq.css);",
-            "@import url('__PATH__url-sq.css');",
-            "@import url(\"__PATH__url-dq.css\");",
-            "@import \"__PATH__media-simple.css\" print;",
-            "@import url(\"__PATH__media-simple-url.css\") print;",
-            "@import '__PATH__media-simple-comma.css' print, screen;",
-            "@import \"__PATH__media-complex.css\" screen and (min-width: 400px) and (max-width: 700px);",
-            "@import url(\"__PATH__media-complex-url.css\") screen and (min-width: 400px) and (max-width: 700px);",
-            // TODO: are the following rewritten correctly?
-            "@import \"__DOTS__/rewrite/deeper/more.css\";",
-            "@import \"__DOTS__/root/css/a.css\" (device-width: 320px);",
-            ""
-        ].join("\n");
-
-        var URLS_UNMODIFIED = TEMPLATE_URLS.replace(/__PATH__/g, '');
-        var IMPORTS_UNMODIFIED = TEMPLATE_IMPORTS.replace(/__PATH__/g, '').replace(/__DOTS__/g, '..');
+        var URLS_UNMODIFIED = fs.readFileSync(path.join(FIXTURES_DIR, 'rewrite/urls.css'), 'utf-8');
+        var IMPORTS_UNMODIFIED = fs.readFileSync(path.join(FIXTURES_DIR, 'rewrite/imports.css'), 'utf-8');
 
         function assertRequestBodyIs(reqPath, result, done) {
             request(BASE_URL + reqPath, function (err, res, body) {

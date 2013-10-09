@@ -1,0 +1,15 @@
+#shorthand { background: transparent left top no-repeat url(__PATH__shorthand.png);}
+#no-quotes { background: url(__PATH__no-quotes.png);}
+#single-quotes { background: url('__PATH__single-quotes.png');}
+#double-quotes { background: url("__PATH__double-quotes.png");}
+#spaces { background: url(
+  "__PATH__spaces.png" );}
+#data-url { background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==);}
+#absolute-url { background: url(http://www.example.com/foo.gif?a=b&c=d#bebimbop);}
+#protocol-relative-url { background: url(//www.example.com/foo.gif?a=b&c=d#bebimbop);}
+#escaped-stuff { background:url("__PATH__\)\";\'\(.png"); }
+.unicode-raw { background: url(__PATH__déchaîné.png); }
+.unicode-escaped { background: url(__PATH__d\0000E9cha\EEn\E9.png); }
+.nl-craziness { background:
+    url(__PATH__crazy.png
+    ); }
