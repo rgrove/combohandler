@@ -34,7 +34,7 @@ describe("cluster worker", function () {
             var dispatcherIndex = msgListeners.indexOf(instance._boundDispatch);
 
             instance.should.have.property('_boundDispatch');
-            instance._boundDispatch.should.be.a('function');
+            instance._boundDispatch.should.be.a.Function;
 
             // callback should be the last in the stack
             dispatcherIndex.should.equal(msgListeners.length - 1);
