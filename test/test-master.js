@@ -159,19 +159,13 @@ describe("cluster master", function () {
 
     describe("signal methods", function () {
         beforeEach(function (done) {
-            var instance = new ComboMaster({ pids: PIDS_DIR });
-
-            sinon.stub(instance.cluster, "disconnect");
-            this.instance = instance;
+            this.instance = new ComboMaster({ pids: PIDS_DIR });
 
             mkdirp(PIDS_DIR, done);
         });
 
         afterEach(function (done) {
-            var instance = this.instance;
-
-            instance.cluster.disconnect.restore();
-            this.instance = instance = null;
+            this.instance = null;
 
             cleanPidsDir(done);
         });
@@ -182,6 +176,7 @@ describe("cluster master", function () {
 
                 var consoleError = sinon.stub(console, "error");
                 var processExit = sinon.stub(instance.process, "exit", function (exitCode) {
+                    // verify that error message was sent
                     consoleError.calledOnce.should.be.ok;
                     consoleError.calledWith('combohandler master not running!');
 
@@ -199,58 +194,70 @@ describe("cluster master", function () {
             it("should log master state", function (done) {
                 var instance = this.instance;
 
-                var setupMaster = sinon.stub(instance.cluster, "setupMaster");
                 var consoleError = sinon.stub(console, "error", function (tmpl, name, pid, status) {
                     // '%s\033[90m %d\033[0m \033[' + color + 'm%s\033[0m', name, pid, status
                     tmpl.should.equal('%s\u001b[90m %d\u001b[0m \u001b[36m%s\u001b[0m');
                     name.should.equal('master');
-                    pid.should.be.type('number'); // indeterminate, since pid always changes
+                    pid.should.equal(process.pid);
                     status.should.equal('alive');
 
                     consoleError.restore();
-                    setupMaster.restore();
 
-                    instance.destroy(done);
-                    instance.cluster.disconnect.invokeCallback();
+                    done();
                 });
 
-                instance.start(function () {
+                createMasterPidfile(function () {
                     instance.status();
                 });
             });
         });
 
-        it("#restart() should send SIGUSR2", function (done) {
-            var instance = this.instance;
+        describe("#restart()", function () {
+            it("should error when master not started", function (done) {
+                var instance = this.instance;
 
-            sinon.stub(instance, "_signalMaster", function (signal) {
-                signal.should.equal('SIGUSR2');
-                done();
+                var consoleError = sinon.stub(console, "error");
+                var processExit = sinon.stub(instance.process, "exit", function (exitCode) {
+                    // verify that error messages were sent
+                    consoleError.calledTwice.should.be.ok;
+                    consoleError.calledWith("Error sending signal %s to combohandler master process", 'SIGUSR2');
+                    consoleError.calledWith('combohandler master not running!');
+
+                    exitCode.should.equal(1);
+
+                    processExit.restore();
+                    consoleError.restore();
+
+                    done();
+                });
+
+                instance.restart();
             });
 
-            instance.restart();
+            it("should error when previous master did not clean pidfile", function (done) {
+                var instance = this.instance;
+
+                var consoleError = sinon.stub(console, "error", function (msg) {
+                    msg.should.equal('combohandler master not running!');
+                    consoleError.restore();
+                    done();
+                });
+
+                // TODO: safer method of finding a pid that doesn't exist?
+                createMasterPidfile(process.pid - 1, function () {
+                    instance.restart();
+                });
+            });
+
+            it("should send SIGUSR2 to master", signalMasterSuccess('restart', 'SIGUSR2'));
         });
 
-        it("#shutdown() should send SIGTERM", function (done) {
-            var instance = this.instance;
-
-            sinon.stub(instance, "_signalMaster", function (signal) {
-                signal.should.equal('SIGTERM');
-                done();
-            });
-
-            instance.shutdown();
+        describe("#shutdown()", function () {
+            it("should send SIGTERM to master", signalMasterSuccess('shutdown', 'SIGTERM'));
         });
 
-        it("#stop() should send SIGKILL", function (done) {
-            var instance = this.instance;
-
-            sinon.stub(instance, "_signalMaster", function (signal) {
-                signal.should.equal('SIGKILL');
-                done();
-            });
-
-            instance.stop();
+        describe("#stop()", function () {
+            it("should send SIGKILL to master", signalMasterSuccess('stop', 'SIGKILL'));
         });
     });
 
@@ -403,6 +410,39 @@ describe("cluster master", function () {
         spyProcess.getCall(2).calledWith('SIGUSR2',    sinon.match.func).should.be.ok;
 
         return spyProcess;
+    }
+
+    function createMasterPidfile(pid, done) {
+        if ('function' === typeof pid) {
+            done = pid;
+            pid = process.pid;
+        }
+        mkdirp(PIDS_DIR, function () {
+            fs.writeFile(path.join(PIDS_DIR, "master.pid"), pid + "", done);
+        });
+    }
+
+    function signalMasterSuccess(methodName, expectedSignal) {
+        return function (done) {
+            var instance = this.instance;
+
+            sinon.stub(console, "error"); // silence logging
+            sinon.stub(instance.process, "kill", function (masterPid, signal) {
+                // match arguments
+                masterPid.should.equal(process.pid);
+                signal.should.equal(expectedSignal);
+
+                // remove stubs
+                instance.process.kill.restore();
+                console.error.restore();
+
+                done();
+            });
+
+            createMasterPidfile(function () {
+                instance[methodName]();
+            });
+        };
     }
 
     function cleanPidsDir(done) {
