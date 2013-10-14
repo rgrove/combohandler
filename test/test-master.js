@@ -272,9 +272,70 @@ describe("cluster master", function () {
             afterEach(function () {
                 this.instance = null;
             });
-            it("should call cluster.disconnect");
-            it("should hook process 'exit'");
-            it("should remove master pidfile");
+
+            it("should call cluster.disconnect", function (done) {
+                var instance = this.instance;
+
+                var consoleLog = sinon.stub(console, "log"); // silence
+                sinon.stub(instance.cluster, "disconnect", function () {
+                    // if it got here, we're good.
+
+                    consoleLog.restore();
+                    instance.cluster.disconnect.restore();
+
+                    done();
+                });
+
+                instance.gracefulShutdown();
+            });
+
+            it("should hook process 'exit'", function (done) {
+                var instance = this.instance;
+
+                var consoleLog = sinon.stub(console, "log"); // silence
+                sinon.stub(instance.cluster, "disconnect").yields();
+                sinon.stub(instance.process, "once", function () {
+                    instance.process.once.calledOnce.should.be.ok;
+                    instance.process.once.calledWith('exit', sinon.match.func).should.be.ok;
+
+                    consoleLog.restore();
+                    instance.cluster.disconnect.restore();
+                    instance.process.once.restore();
+
+                    done();
+                });
+
+                instance.gracefulShutdown();
+            });
+
+            it("should remove master pidfile on process exit", function (done) {
+                var instance = this.instance;
+
+                var consoleLog = sinon.stub(console, "log"); // verify later
+                sinon.stub(instance.cluster, "disconnect").yields();
+
+                var processOnce = sinon.stub(instance.process, "once");
+                processOnce.withArgs("exit", sinon.match.func).callsArg(1); // where the magic happens
+
+                createMasterPidfile(function () {
+                    instance.gracefulShutdown();
+
+                    consoleLog.calledTwice.should.be.ok;
+                    consoleLog.calledWith('combohandler master %d shutting down...', process.pid).should.be.ok;
+                    consoleLog.calledWith('combohandler master %d finished shutting down!', process.pid).should.be.ok;
+
+                    // since we can't hook the inner anonymous function,
+                    // we'll have to be satisfied with verifying the synchronous
+                    // removal of master.pid. :P
+                    fs.existsSync(path.join(PIDS_DIR, "master.pid")).should.be.false;
+
+                    consoleLog.restore();
+                    instance.cluster.disconnect.restore();
+                    processOnce.restore();
+
+                    done();
+                });
+            });
         });
 
         describe("restartWorkers()", function () {
