@@ -339,7 +339,34 @@ describe("cluster master", function () {
         });
 
         describe("restartWorkers()", function () {
-            it("should send SIGUSR2 to all worker processes");
+            beforeEach(function () {
+                this.instance = new ComboMaster({ pids: PIDS_DIR });
+                this.instance.cluster.workers = {
+                    "1": { process: { pid: 1 } },
+                    "2": { process: { pid: 2 } },
+                    "3": { process: { pid: 3 } }
+                };
+            });
+            afterEach(function () {
+                this.instance.cluster.workers = {};
+                this.instance = null;
+            });
+
+            it("should send SIGUSR2 to all worker processes", function () {
+                var instance = this.instance;
+                var consoleLog = sinon.stub(console, "log"); // silence
+                var processKill = sinon.stub(instance.process, "kill");
+
+                instance.restartWorkers();
+
+                processKill.callCount.should.equal(3);
+                processKill.getCall(0).calledWith(1, "SIGUSR2");
+                processKill.getCall(1).calledWith(2, "SIGUSR2");
+                processKill.getCall(2).calledWith(3, "SIGUSR2");
+
+                processKill.restore();
+                consoleLog.restore();
+            });
         });
     });
 
