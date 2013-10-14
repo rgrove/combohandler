@@ -261,6 +261,27 @@ describe("cluster master", function () {
         });
     });
 
+    describe("process event handlers:", function () {
+        beforeEach(makePidsDir);
+        afterEach(cleanPidsDir);
+
+        describe("gracefulShutdown()", function () {
+            beforeEach(function () {
+                this.instance = new ComboMaster({ pids: PIDS_DIR });
+            });
+            afterEach(function () {
+                this.instance = null;
+            });
+            it("should call cluster.disconnect");
+            it("should hook process 'exit'");
+            it("should remove master pidfile");
+        });
+
+        describe("restartWorkers()", function () {
+            it("should send SIGUSR2 to all worker processes");
+        });
+    });
+
     describe("handling cluster events", function () {
         // ensure pids dir exists, no master pids created in these tests
         before(makePidsDir);
