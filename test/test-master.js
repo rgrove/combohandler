@@ -445,7 +445,7 @@ describe("cluster master", function () {
         return function (done) {
             var instance = this.instance;
 
-            sinon.stub(console, "error"); // silence logging
+            var consoleError = sinon.stub(console, "error"); // silence
             sinon.stub(instance.process, "kill", function (masterPid, signal) {
                 // match arguments
                 masterPid.should.equal(process.pid);
@@ -453,7 +453,7 @@ describe("cluster master", function () {
 
                 // remove stubs
                 instance.process.kill.restore();
-                console.error.restore();
+                consoleError.restore();
 
                 done();
             });
