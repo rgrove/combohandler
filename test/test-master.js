@@ -158,60 +158,99 @@ describe("cluster master", function () {
     });
 
     describe("signal methods", function () {
-        afterEach(cleanPidsDir);
-
-        it("#status() should log master state", function (done) {
-            this.timeout(100);
-
+        beforeEach(function (done) {
             var instance = new ComboMaster({ pids: PIDS_DIR });
 
-            instance.emit('start', function () {
-                instance._detachEvents();
+            sinon.stub(instance.cluster, "disconnect");
+            this.instance = instance;
+
+            mkdirp(PIDS_DIR, done);
+        });
+
+        afterEach(function (done) {
+            var instance = this.instance;
+
+            instance.cluster.disconnect.restore();
+            this.instance = instance = null;
+
+            cleanPidsDir(done);
+        });
+
+        describe("#status()", function () {
+            it("should error when master not started", function (done) {
+                var instance = this.instance;
+
+                var consoleError = sinon.stub(console, "error");
+                var processExit = sinon.stub(instance.process, "exit", function (exitCode) {
+                    consoleError.calledOnce.should.be.ok;
+                    consoleError.calledWith('combohandler master not running!');
+
+                    exitCode.should.equal(1);
+
+                    processExit.restore();
+                    consoleError.restore();
+
+                    done();
+                });
+
                 instance.status();
-                setTimeout(done, 10);
+            });
+
+            it("should log master state", function (done) {
+                var instance = this.instance;
+
+                var setupMaster = sinon.stub(instance.cluster, "setupMaster");
+                var consoleError = sinon.stub(console, "error", function (tmpl, name, pid, status) {
+                    // '%s\033[90m %d\033[0m \033[' + color + 'm%s\033[0m', name, pid, status
+                    tmpl.should.equal('%s\u001b[90m %d\u001b[0m \u001b[36m%s\u001b[0m');
+                    name.should.equal('master');
+                    pid.should.be.type('number'); // indeterminate, since pid always changes
+                    status.should.equal('alive');
+
+                    consoleError.restore();
+                    setupMaster.restore();
+
+                    instance.destroy(done);
+                    instance.cluster.disconnect.invokeCallback();
+                });
+
+                instance.start(function () {
+                    instance.status();
+                });
             });
         });
 
         it("#restart() should send SIGUSR2", function (done) {
-            var instance = new ComboMaster({ pids: PIDS_DIR });
+            var instance = this.instance;
 
-            instance._signalMaster = function (signal) {
+            sinon.stub(instance, "_signalMaster", function (signal) {
                 signal.should.equal('SIGUSR2');
                 done();
-            };
-
-            instance.emit('start', function () {
-                instance._detachEvents();
-                instance.restart();
             });
+
+            instance.restart();
         });
 
         it("#shutdown() should send SIGTERM", function (done) {
-            var instance = new ComboMaster({ pids: PIDS_DIR });
+            var instance = this.instance;
 
-            instance._signalMaster = function (signal) {
+            sinon.stub(instance, "_signalMaster", function (signal) {
                 signal.should.equal('SIGTERM');
                 done();
-            };
-
-            instance.emit('start', function () {
-                instance._detachEvents();
-                instance.shutdown();
             });
+
+            instance.shutdown();
         });
 
         it("#stop() should send SIGKILL", function (done) {
-            var instance = new ComboMaster({ pids: PIDS_DIR });
+            var instance = this.instance;
 
-            instance._signalMaster = function (signal) {
+            sinon.stub(instance, "_signalMaster", function (signal) {
                 signal.should.equal('SIGKILL');
                 done();
-            };
-
-            instance.emit('start', function () {
-                instance._detachEvents();
-                instance.stop();
             });
+
+            instance.stop();
         });
     });
 
