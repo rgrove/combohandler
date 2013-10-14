@@ -157,11 +157,11 @@ describe("cluster master", function () {
         });
     });
 
-    describe("signal methods", function () {
+    describe("signal methods:", function () {
         beforeEach(function (done) {
             this.instance = new ComboMaster({ pids: PIDS_DIR });
 
-            mkdirp(PIDS_DIR, done);
+            makePidsDir(done);
         });
 
         afterEach(function (done) {
@@ -263,9 +263,7 @@ describe("cluster master", function () {
 
     describe("handling cluster events", function () {
         // ensure pids dir exists, no master pids created in these tests
-        before(function (done) {
-            mkdirp(PIDS_DIR, done);
-        });
+        before(makePidsDir);
         after(cleanPidsDir);
 
         var mockWorkerIds = 0;
@@ -417,7 +415,7 @@ describe("cluster master", function () {
             done = pid;
             pid = process.pid;
         }
-        mkdirp(PIDS_DIR, function () {
+        makePidsDir(function () {
             fs.writeFile(path.join(PIDS_DIR, "master.pid"), pid + "", done);
         });
     }
@@ -443,6 +441,10 @@ describe("cluster master", function () {
                 instance[methodName]();
             });
         };
+    }
+
+    function makePidsDir(done) {
+        mkdirp(PIDS_DIR, done);
     }
 
     function cleanPidsDir(done) {
