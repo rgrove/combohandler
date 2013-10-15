@@ -158,17 +158,8 @@ describe("cluster master", function () {
     });
 
     describe("signal methods:", function () {
-        beforeEach(function (done) {
-            this.instance = new ComboMaster({ pids: PIDS_DIR });
-
-            makePidsDir(done);
-        });
-
-        afterEach(function (done) {
-            this.instance = null;
-
-            cleanPidsDir(done);
-        });
+        beforeEach(createInstance);
+        afterEach(cleanupInstance);
 
         describe("#status()", function () {
             it("should error when master not started", function (done) {
@@ -262,17 +253,10 @@ describe("cluster master", function () {
     });
 
     describe("process event handlers:", function () {
-        beforeEach(makePidsDir);
-        afterEach(cleanPidsDir);
+        beforeEach(createInstance);
+        afterEach(cleanupInstance);
 
         describe("gracefulShutdown()", function () {
-            beforeEach(function () {
-                this.instance = new ComboMaster({ pids: PIDS_DIR });
-            });
-            afterEach(function () {
-                this.instance = null;
-            });
-
             it("should call cluster.disconnect", function (done) {
                 var instance = this.instance;
 
@@ -340,7 +324,6 @@ describe("cluster master", function () {
 
         describe("restartWorkers()", function () {
             beforeEach(function () {
-                this.instance = new ComboMaster({ pids: PIDS_DIR });
                 this.instance.cluster.workers = {
                     "1": { process: { pid: 1 } },
                     "2": { process: { pid: 2 } },
@@ -349,7 +332,6 @@ describe("cluster master", function () {
             });
             afterEach(function () {
                 this.instance.cluster.workers = {};
-                this.instance = null;
             });
 
             it("should send SIGUSR2 to all worker processes", function () {
@@ -558,5 +540,15 @@ describe("cluster master", function () {
 
     function cleanPidsDir(done) {
         rimraf(PIDS_DIR, done);
+    }
+
+    function createInstance(done) {
+        this.instance = new ComboMaster({ pids: PIDS_DIR });
+        makePidsDir(done);
+    }
+
+    function cleanupInstance(done) {
+        this.instance = null;
+        cleanPidsDir(done);
     }
 });
