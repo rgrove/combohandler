@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var rimraf = require('rimraf');
 var mkdirp = require('mkdirp');
+var should = require('should');
 
 var ComboBase = require('../lib/cluster/base');
 var ComboMaster = require('../lib/cluster');
@@ -352,124 +353,174 @@ describe("cluster master", function () {
         });
     });
 
-    describe("handling cluster events", function () {
-        // ensure pids dir exists, no master pids created in these tests
-        before(makePidsDir);
-        after(cleanPidsDir);
+    describe("worker event", function () {
+        beforeEach(createInstance);
+        afterEach(cleanupInstance);
 
-        var mockWorkerIds = 0;
-        function MockWorker() {
-            var id = mockWorkerIds++;
+        function WorkerAPI(id) {
             this.id = id;
             this.process = {
                 pid: 1e6 + id
             };
         }
-        MockWorker.prototype.send = function (payload) {
-            this._sent = payload;
-        };
-        MockWorker.prototype.destroy = function () {
-            this._destroyed = true;
-        };
+        WorkerAPI.prototype.send = function () {};
+        WorkerAPI.prototype.destroy = function () {};
 
-        it("should set startupTimeout when worker forked", function () {
-            var instance = new ComboMaster({ timeout: 10 });
-            var worker = new MockWorker();
+        describe("'fork'", function () {
+            it("should set startupTimeout", function () {
+                var instance = this.instance;
+                var worker = { id: 1 };
 
-            instance.startupTimeout.should.be.empty;
-            instance._workerForked(worker);
-            instance.startupTimeout.should.have.length(1);
-        });
+                instance._bindCluster();
 
-        it("should clear startupTimeout when worker online");
+                instance.startupTimeout.should.be.empty;
+                instance.cluster.emit('fork', worker);
+                instance.startupTimeout.should.have.property("1");
 
-        it("should send 'listen' command when worker online", function () {
-            var instance = new ComboMaster();
-            var worker = new MockWorker();
-
-            instance._workerOnline(worker);
-
-            worker._sent.should.eql({
-                cmd: 'listen',
-                data: instance.options
+                clearTimeout(instance.startupTimeout["1"]);
             });
         });
 
-        it("should write worker pidfile after worker listening", function () {
-            var instance = new ComboMaster({ pids: PIDS_DIR });
-            var worker = new MockWorker();
+        describe("'online'", function () {
+            it("should clear startupTimeout", function () {
+                var instance = this.instance;
+                var worker = sinon.mock(new WorkerAPI(1));
+                var consoleError = sinon.stub(console, "error"); // silence
 
-            instance._workerListening(worker);
+                instance._bindCluster();
+                instance.startupTimeout["1"] = setTimeout(function() {
+                    should.fail();
+                }, 100);
 
-            worker.process.should.have.property('title', 'combohandler worker');
+                instance.cluster.emit('online', worker.object);
 
-            fs.existsSync(path.join(instance.options.pids, 'worker' + worker.id + '.pid'));
+                instance.startupTimeout["1"].should.have.property('ontimeout', null);
+                consoleError.restore();
+            });
+
+            it("should send 'listen' command", function () {
+                var instance = this.instance;
+                var worker = sinon.mock(new WorkerAPI(1));
+                var consoleError = sinon.stub(console, "error"); // silence
+
+                worker.expects("send").once().withArgs({
+                    cmd: 'listen',
+                    data: instance.options
+                });
+
+                instance._bindCluster();
+
+                instance.cluster.emit('fork', worker.object);
+                instance.cluster.emit('online', worker.object);
+
+                worker.verify();
+                consoleError.restore();
+            });
         });
 
-        it("should set closingTimeout when worker disconnected", function () {
-            var instance = new ComboMaster({ timeout: 10 });
-            var worker = new MockWorker();
+        describe("'listening'", function () {
+            it("should write worker pidfile", function () {
+                var instance = this.instance;
+                var worker = sinon.mock(new WorkerAPI(1));
+                var consoleError = sinon.stub(console, "error"); // silence
 
-            instance.closingTimeout.should.be.empty;
-            instance._workerDisconnected(worker);
-            // timeouts aren't pushed onto the stack, they are assigned at the id's index
-            instance.closingTimeout.should.have.length(worker.id + 1);
+                instance._bindCluster();
+
+                instance.cluster.emit('listening', worker.object);
+
+                worker.object.process.should.have.property('title', 'combohandler worker');
+                fs.existsSync(path.join(instance.options.pids, 'worker1.pid')).should.be.ok;
+
+                consoleError.restore();
+            });
         });
 
-        it("should destroy() worker when closingTimeout expires", function (done) {
-            this.timeout(100);
+        describe("'disconnect'", function () {
+            it("should set closingTimeout", function () {
+                var instance = this.instance;
+                var worker = { id: 1 };
+                var consoleError = sinon.stub(console, "error"); // silence
 
-            var instance = new ComboMaster({ timeout: 10 });
-            var worker = new MockWorker();
+                instance._bindCluster();
+                instance.closingTimeout.should.be.empty;
 
-            instance._workerDisconnected(worker);
+                instance.cluster.emit('disconnect', worker);
 
-            setTimeout(function () {
-                worker.should.have.property('_destroyed', true);
-                done();
-            }, 25);
+                instance.closingTimeout.should.have.property("1");
+                clearTimeout(instance.startupTimeout["1"]);
+                // timeouts aren't pushed onto the stack, they are assigned sparsely by id
+
+                consoleError.restore();
+            });
+
+            it("should destroy() worker when closingTimeout expires", function (done) {
+                var instance = this.instance;
+                var worker = sinon.mock(new WorkerAPI(1));
+                var consoleError = sinon.stub(console, "error"); // silence
+
+                instance.options.timeout = 10;
+
+                worker.expects("destroy").once();
+
+                instance._bindCluster();
+                instance.cluster.emit('disconnect', worker.object);
+
+                setTimeout(function () {
+                    worker.verify();
+                    consoleError.restore();
+                    done();
+                }, 25);
+            });
         });
 
-        it("should clear startupTimeout when worker exited");
+        describe("'exit'", function () {
+            beforeEach(function () {
+                this.instance._bindCluster();
+            });
 
-        it("should clear closingTimeout when worker exited");
+            it("should clear timeouts when worker exited");
 
-        it("should not fork a new worker when worker suicides");
+            it("should not fork a new worker when worker suicides");
 
-        it("should remove worker pidfile when worker suicides", function () {
-            this.timeout(100);
+            it("should remove worker pidfile when worker suicides", function () {
+                var instance = this.instance;
+                var worker = sinon.mock(new WorkerAPI(1));
+                var consoleError = sinon.stub(console, "error"); // silence
 
-            var instance = new ComboMaster({ pids: PIDS_DIR });
-            var worker = new MockWorker();
+                worker.object.suicide = true;
+                instance.cluster.emit('listening', worker.object);
+                instance.cluster.emit('exit', worker.object);
 
-            instance._workerListening(worker);
+                fs.readdirSync(instance.options.pids).should.not.include('worker1.pid');
+                consoleError.restore();
+            });
 
-            worker.suicide = true;
+            it("should remove worker pidfile when worker is reloaded");
 
-            instance._workerExited(worker);
-
-            fs.readdirSync(instance.options.pids).should.not.include('worker' + worker.id + '.pid');
+            it("should exit when flameouts threshhold exceeded");
         });
-
-        it("should remove worker pidfile when worker is reloaded");
-
-        it("should exit when flameouts threshhold exceeded");
     });
 
     describe("on 'listen'", function () {
-        // disconnect called from #destroy() cleans the pids
+        beforeEach(createInstance);
+        afterEach(cleanupInstance);
 
         it("should fork workers", function (done) {
-            this.timeout(0);
+            var consoleLog = sinon.stub(console, "log"); // silence
 
-            var instance = new ComboMaster({
-                workers: 1,
-                pids: PIDS_DIR
-            });
+            var instance = this.instance;
+            instance.options.workers = 1;
+
+            var setupMaster = sinon.stub(instance, "setupMaster");
+            var clusterFork = sinon.stub(instance.cluster, "fork");
 
             instance.on('listen', function () {
                 setTimeout(function () {
-                    instance.destroy(done);
+                    clusterFork.calledOnce.should.be.ok;
+                    clusterFork.restore();
+                    setupMaster.restore();
+                    consoleLog.restore();
+                    done();
                 }, 10);
             });
 
@@ -548,6 +599,7 @@ describe("cluster master", function () {
     }
 
     function cleanupInstance(done) {
+        this.instance.emit('cleanup');
         this.instance = null;
         cleanPidsDir(done);
     }
