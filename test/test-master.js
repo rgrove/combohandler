@@ -86,11 +86,15 @@ describe("cluster master", function () {
 
         it("should setupMaster with exec config", function (done) {
             var instance = this.instance;
-            instance.setupMaster = function (options) {
-                options.should.have.property('exec');
-                options.exec.should.equal(path.resolve(__dirname, '../lib/cluster/worker.js'));
-            };
-            instance.start(done);
+            var setupMaster = sinon.stub(instance.cluster, "setupMaster");
+            instance.start(function () {
+                setupMaster.calledOnce.should.be.true;
+                setupMaster.calledWith(sinon.match.object);
+                setupMaster.firstCall.args[0]
+                    .should.have.property('exec', path.resolve(__dirname, '../lib/cluster/worker.js'));
+                setupMaster.restore();
+                done();
+            });
         });
 
         it("should create master.pid", function (done) {
@@ -134,12 +138,14 @@ describe("cluster master", function () {
 
         it("should detach cluster and process events", function (done) {
             var instance = this.instance;
+            var setupMaster = sinon.stub(instance.cluster, "setupMaster");
             instance.start();
 
             instance.destroy(function () {
                 verifyCluster(instance.cluster.removeListener);
                 verifyProcess(instance.process.removeListener);
 
+                setupMaster.restore();
                 done();
             });
 
@@ -622,7 +628,7 @@ describe("cluster master", function () {
             var instance = this.instance;
             instance.options.workers = 1;
 
-            var setupMaster = sinon.stub(instance, "setupMaster");
+            var setupMaster = sinon.stub(instance.cluster, "setupMaster");
             var clusterFork = sinon.stub(instance.cluster, "fork");
 
             instance.on('listen', function () {
