@@ -379,6 +379,25 @@ describe("cluster master", function () {
 
                 clearTimeout(instance.startupTimeout["1"]);
             });
+
+            it("should log error if startupTimeout elapsed", function () {
+                var instance = this.instance;
+                var worker = { id: 1 };
+                var consoleError = sinon.stub(console, "error");
+                var clock = sinon.useFakeTimers("setTimeout");
+
+                instance._bindCluster();
+                instance.options.timeout = 10;
+
+                instance.cluster.emit('fork', worker);
+                clock.tick(20);
+
+                consoleError.calledOnce.should.be.true;
+                consoleError.calledWith('Something is wrong with worker %d', 1).should.be.true;
+
+                consoleError.restore();
+                clock.restore();
+            });
         });
 
         describe("'online'", function () {
