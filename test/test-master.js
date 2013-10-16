@@ -475,29 +475,121 @@ describe("cluster master", function () {
 
         describe("'exit'", function () {
             beforeEach(function () {
+                this.consoleError = sinon.stub(console, "error"); // silence
+                sinon.stub(this.instance.cluster, "fork");
                 this.instance._bindCluster();
             });
-
-            it("should clear timeouts when worker exited");
-
-            it("should not fork a new worker when worker suicides");
-
-            it("should remove worker pidfile when worker suicides", function () {
-                var instance = this.instance;
-                var worker = sinon.mock(new WorkerAPI(1));
-                var consoleError = sinon.stub(console, "error"); // silence
-
-                worker.object.suicide = true;
-                instance.cluster.emit('listening', worker.object);
-                instance.cluster.emit('exit', worker.object);
-
-                fs.readdirSync(instance.options.pids).should.not.include('worker1.pid');
-                consoleError.restore();
+            afterEach(function () {
+                this.consoleError.restore();
+                this.consoleError = null;
+                this.instance.cluster.fork.restore();
             });
 
-            it("should remove worker pidfile when worker is reloaded");
+            it("should clear startup and closing timeouts", function () {
+                var instance = this.instance;
 
-            it("should exit when flameouts threshhold exceeded");
+                instance.startupTimeout[1] = setTimeout(should.fail, 100);
+                instance.closingTimeout[1] = setTimeout(should.fail, 100);
+
+                instance.cluster.emit('exit', { id: 1 });
+
+                instance.startupTimeout[1].should.have.property('ontimeout', null);
+                instance.closingTimeout[1].should.have.property('ontimeout', null);
+            });
+
+            describe("suicide", function () {
+                it("should not spawn new worker", function () {
+                    var instance = this.instance;
+                    var removePidFile = sinon.stub(instance.pidutil, "removePidFileSync");
+
+                    instance.cluster.emit('exit', { id: 1, suicide: true });
+                    instance.cluster.fork.callCount.should.equal(0);
+
+                    removePidFile.restore();
+                });
+
+                it("should remove worker pidfile", function () {
+                    var instance = this.instance;
+                    var removePidFile = sinon.stub(instance.pidutil, "removePidFileSync");
+
+                    instance.cluster.emit('exit', { id: 1, suicide: true });
+
+                    removePidFile.callCount.should.equal(1);
+                    removePidFile.calledWith(instance.options.pids, 'worker1.pid');
+
+                    removePidFile.restore();
+                });
+            });
+
+            describe("natural death", function () {
+                it("should spawn new worker", function () {
+                    var instance = this.instance;
+                    instance.cluster.emit('exit', { id: 1 });
+                    instance.cluster.fork.calledOnce.should.be.ok;
+                });
+            });
+
+            describe("reloading", function () {
+                it("should remove worker pidfile", function () {
+                    var instance = this.instance;
+                    var removePidFile = sinon.stub(instance.pidutil, "removePidFileSync");
+
+                    instance.cluster.emit('exit', { id: 1 }, null, "SIGUSR2");
+
+                    removePidFile.callCount.should.equal(1);
+                    removePidFile.calledWith(instance.options.pids, 'worker1.pid');
+                    removePidFile.restore();
+                });
+
+                it("should not remove worker pidfile when worker receives a different signal", function () {
+                    var instance = this.instance;
+                    var removePidFile = sinon.stub(instance.pidutil, "removePidFileSync");
+
+                    instance.cluster.emit('exit', { id: 1 }, null, "SIGKILL");
+
+                    removePidFile.callCount.should.equal(0);
+                    removePidFile.restore();
+                });
+            });
+
+            describe("flameouts", function () {
+                it("should not exit when flameouts threshhold unmet", function () {
+                    var instance = this.instance;
+                    instance.flameouts = 0;
+
+                    instance.cluster.emit('exit', { id: 1 }, 1);
+
+                    this.consoleError.calledWith('Worker %d exited with code %d', 1, 1).should.be.ok;
+                });
+
+                it("should exit when flameouts threshhold exceeded", function (done) {
+                    var instance = this.instance;
+                    var consoleError = this.consoleError;
+                    var removePidFile = sinon.stub(instance.pidutil, "removePidFileSync");
+
+                    var processExit = sinon.stub(instance.process, "exit", function (exitCode) {
+                        // verify that error messages were sent
+                        consoleError.calledTwice.should.be.ok;
+                        consoleError.calledWith("Too many errors during startup, bailing!");
+
+                        removePidFile.callCount.should.equal(1);
+                        removePidFile.calledWith(instance.options.pids, 'master.pid');
+
+                        // should not spawn another worker
+                        instance.cluster.fork.callCount.should.equal(0);
+
+                        exitCode.should.equal(1);
+
+                        removePidFile.restore();
+                        processExit.restore();
+
+                        done();
+                    });
+
+                    instance.flameouts = 20;
+                    instance.cluster.emit('exit', { id: 1 }, 1);
+                });
+            });
         });
     });
 
