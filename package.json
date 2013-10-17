@@ -66,6 +66,6 @@
     "scripts": {
         "pretest": "jshint bin lib test/*.js",
         "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha",
-        "posttest": "istanbul check-coverage --statements 80 --functions 80 --branches 70 --lines 80"
+        "posttest": "istanbul check-coverage --statements -9 --functions -2 --branches -9 --lines -7"
     }
 }
