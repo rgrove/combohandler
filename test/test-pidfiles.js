@@ -7,7 +7,7 @@ var should = require('should');
 
 var pidfiles = require('../lib/cluster/pidfiles');
 
-describe("pidfiles", function () {
+describe("cluster pidfiles", function () {
     /*jshint expr:true */
 
     var PIDS_DIR = 'test/fixtures/pids';
@@ -59,11 +59,11 @@ describe("pidfiles", function () {
 
             fs.readFileSync
                 .withArgs(path.join(PIDS_DIR, "worker1.pid"))
-                .returns("1");
+                .returns("100");
 
             pidfiles.getWorkerPidsSync(PIDS_DIR)
                 .should.have.length(1)
-                    .and.contain(1);
+                    .and.contain(100);
         });
     });
 
