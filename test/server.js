@@ -763,10 +763,10 @@ describe('combohandler', function () {
         return function (done) {
             request(BASE_URL + config.path, function (err, res, body) {
                 assert.ifError(err);
-                res.should.have.status(expectedStatus);
                 if (expectedBody) {
                     body.should.equal(expectedBody);
                 }
+                res.should.have.status(expectedStatus);
                 done();
             });
         };
