@@ -572,6 +572,46 @@ describe('combohandler', function () {
             body: "Bad request. Unable to resolve path: /dynamic/deadbeef",
             status: 400
         }));
+
+        describe("with multiple parameters", function () {
+            before(function () {
+                app.get("/dynamic/:major/:minor",
+                    combo.combine({ rootPath: FIXTURES_DIR + "/dynamic/:major/:minor" }),
+                combo.respond);
+
+                app.get("/:major/:minor/rootpath-omit",
+                    combo.combine({ rootPath: FIXTURES_DIR + "/dynamic/:major/static" }),
+                combo.respond);
+
+                app.get("/omit-route/:major",
+                    combo.combine({ rootPath: FIXTURES_DIR + "/dynamic/:major/:minor" }),
+                combo.respond);
+
+                app.get("/:major/separated/by/:minor",
+                    combo.combine({ rootPath: FIXTURES_DIR + "/:major/:minor/static" }),
+                combo.respond);
+            });
+
+            it("should resolve path", assertResponds({
+                path: "/dynamic/decafbad/static?c.js&d.js",
+                body: "c();\n\nd();\n"
+            }));
+
+            it("should resolve root path that omits route parameter", assertResponds({
+                path: "/decafbad/latest/rootpath-omit?c.js&d.js",
+                body: "c();\n\nd();\n"
+            }));
+
+            it("should resolve route that has more parameters than root path", assertResponds({
+                path: "/omit-route/decafbad?a.js&static/c.js",
+                body: "a();\n\nc();\n"
+            }));
+
+            it("should resolve route that has separated parameters", assertResponds({
+                path: "/dynamic/separated/by/decafbad?c.js&d.js",
+                body: "c();\n\nd();\n"
+            }));
+        });
     });
 
     // -- Complex Integration --------------------------------------------------
