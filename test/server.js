@@ -266,85 +266,66 @@ describe('combohandler', function () {
             err.message.should.equal('test');
         });
 
-        it('should return a 500 when error before middleware', function (done) {
-            request(BASE_URL + '/error-next?a.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(500);
-                done();
-            });
-        });
-
-        it('should return a 500 when error after middleware', function (done) {
-            request(BASE_URL + '/error-throw?a.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(500);
-                done();
-            });
-        });
-
-        it('should return a 400 Bad Request error when no files are specified', function (done) {
-            request(BASE_URL + '/js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(400);
-                body.should.equal('Bad request. No files requested.');
-                done();
-            });
-        });
-
-        it('should throw a 400 Bad Request error when a file is not found', function (done) {
+        it('should set content-type text/plain when responding 400 Bad Request', function (done) {
             request(BASE_URL + '/js?bogus.js', function (err, res, body) {
                 assert.ifError(err);
                 res.should.have.status(400);
                 res.should.have.header('content-type', 'text/plain; charset=utf-8');
-                body.should.equal('Bad request. File not found: bogus.js');
                 done();
             });
         });
 
-        it('should throw a 400 Bad Request error when a white-listed MIME type is not found', function (done) {
-            request(BASE_URL + '/js?foo.bar', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(400);
-                body.should.equal('Bad request. Illegal MIME type present.');
-                done();
-            });
-        });
+        it('should return a 500 when error before middleware', assertResponds({
+            path: '/error-next?a.js',
+            status: 500
+        }));
 
-        it('should throw a 400 Bad Request error when an unmapped MIME type is found with other valid types', function (done) {
-            request(BASE_URL + '/js?a.js&foo.bar', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(400);
-                body.should.equal('Bad request. Only one MIME type allowed per request.');
-                done();
-            });
-        });
+        it('should return a 500 when error after middleware', assertResponds({
+            path: '/error-throw?a.js',
+            status: 500
+        }));
 
-        it('should throw a 400 Bad Request error when more than one valid MIME type is found', function (done) {
-            request(BASE_URL + '/js?a.js&b.css', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(400);
-                body.should.equal('Bad request. Only one MIME type allowed per request.');
-                done();
-            });
-        });
+        it('should return a 400 Bad Request error when no files are specified', assertResponds({
+            path: '/js',
+            body: 'Bad request. No files requested.',
+            status: 400
+        }));
 
-        it('should throw a 400 Bad Request error when a querystring is truncated', function (done) {
-            request(BASE_URL + '/js?a.js&b', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(400);
-                body.should.equal('Bad request. Truncated query parameters.');
-                done();
-            });
-        });
+        it('should throw a 400 Bad Request error when a file is not found', assertResponds({
+            path: '/js?bogus.js',
+            body: 'Bad request. File not found: bogus.js',
+            status: 400
+        }));
 
-        it('should throw a 400 Bad Request error when a querystring is dramatically truncated', function (done) {
-            request(BASE_URL + '/js?a', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(400);
-                body.should.equal('Bad request. Truncated query parameters.');
-                done();
-            });
-        });
+        it('should throw a 400 Bad Request error when a white-listed MIME type is not found', assertResponds({
+            path: '/js?foo.bar',
+            body: 'Bad request. Illegal MIME type present.',
+            status: 400
+        }));
+
+        it('should throw a 400 Bad Request error when an unmapped MIME type is found with other valid types', assertResponds({
+            path: '/js?a.js&foo.bar',
+            body: 'Bad request. Only one MIME type allowed per request.',
+            status: 400
+        }));
+
+        it('should throw a 400 Bad Request error when more than one valid MIME type is found', assertResponds({
+            path: '/js?a.js&b.css',
+            body: 'Bad request. Only one MIME type allowed per request.',
+            status: 400
+        }));
+
+        it('should throw a 400 Bad Request error when a querystring is truncated', assertResponds({
+            path: '/js?a.js&b',
+            body: 'Bad request. Truncated query parameters.',
+            status: 400
+        }));
+
+        it('should throw a 400 Bad Request error when a querystring is dramatically truncated', assertResponds({
+            path: '/js?a',
+            body: 'Bad request. Truncated query parameters.',
+            status: 400
+        }));
 
         describe('path traversal', function () {
             var paths = [
@@ -367,7 +348,6 @@ describe('combohandler', function () {
                     request(BASE_URL + '/js?' + path, function (err, res, body) {
                         assert.ifError(err);
                         res.should.have.status(400);
-                        res.should.have.header('content-type', 'text/plain; charset=utf-8');
                         body.should.match(/^Bad request. File not found: /);
                         done();
                     });
@@ -387,14 +367,6 @@ describe('combohandler', function () {
 
         var URLS_UNMODIFIED = fs.readFileSync(path.join(FIXTURES_DIR, 'rewrite/urls.css'), 'utf-8');
         var IMPORTS_UNMODIFIED = fs.readFileSync(path.join(FIXTURES_DIR, 'rewrite/imports.css'), 'utf-8');
-
-        function assertRequestBodyIs(reqPath, result, done) {
-            request(BASE_URL + reqPath, function (err, res, body) {
-                assert.ifError(err);
-                body.should.equal(result);
-                done();
-            });
-        }
 
         before(function () {
             app.get('/norewrite', combo.combine({
@@ -444,17 +416,20 @@ describe('combohandler', function () {
             }), combo.respond);
         });
 
-        it("should not rewrite without a basePath or webRoot", function (done) {
-            assertRequestBodyIs("/norewrite?urls.css", URLS_UNMODIFIED, done);
-        });
+        it("should not rewrite without a basePath or webRoot", assertResponds({
+            path: "/norewrite?urls.css",
+            body: URLS_UNMODIFIED
+        }));
 
-        it("should not rewrite without a basePath or webRoot as middleware", function (done) {
-            assertRequestBodyIs("/rewrite-middleware-noconfig?urls.css", URLS_UNMODIFIED, done);
-        });
+        it("should not rewrite without a basePath or webRoot as middleware", assertResponds({
+            path: "/rewrite-middleware-noconfig?urls.css",
+            body: URLS_UNMODIFIED
+        }));
 
-        it("should not rewrite when middleware before combine()", function (done) {
-            assertRequestBodyIs("/rewrite-middleware-before-combine?urls.css", URLS_UNMODIFIED, done);
-        });
+        it("should not rewrite when middleware before combine()", assertResponds({
+            path: "/rewrite-middleware-before-combine?urls.css",
+            body: URLS_UNMODIFIED
+        }));
 
         describe("with configured basePath", function () {
             var URLS_REWRITTEN = TEMPLATE_URLS.replace(/__PATH__/g, '/rewritten/');
@@ -465,21 +440,25 @@ describe('combohandler', function () {
             var IMPORTS_REWRITTEN = TEMPLATE_IMPORTS.replace(/__PATH__/g, '/rewritten/')
                                                     .replace(/__DOTS__/g, '');
 
-            it("should allow basePath without trailing slash", function (done) {
-                assertRequestBodyIs("/rewrite-noslash?urls.css", URLS_REWRITTEN, done);
-            });
+            it("should allow basePath without trailing slash", assertResponds({
+                path: "/rewrite-noslash?urls.css",
+                body: URLS_REWRITTEN
+            }));
 
-            it("should rewrite valid urls", function (done) {
-                assertRequestBodyIs("/rewrite?urls.css&deeper/more.css", MORE_URLS_REWRITTEN, done);
-            });
+            it("should rewrite valid urls", assertResponds({
+                path: "/rewrite?urls.css&deeper/more.css",
+                body: MORE_URLS_REWRITTEN
+            }));
 
-            it("should NOT rewrite import paths when disabled", function (done) {
-                assertRequestBodyIs("/rewrite?imports.css", IMPORTS_UNMODIFIED, done);
-            });
+            it("should NOT rewrite import paths when disabled", assertResponds({
+                path: "/rewrite?imports.css",
+                body: IMPORTS_UNMODIFIED
+            }));
 
-            it("should rewrite import paths when enabled", function (done) {
-                assertRequestBodyIs("/rewrite-imports?imports.css", IMPORTS_REWRITTEN, done);
-            });
+            it("should rewrite import paths when enabled", assertResponds({
+                path: "/rewrite-imports?imports.css",
+                body: IMPORTS_REWRITTEN
+            }));
         });
 
         describe("with configured webRoot", function () {
@@ -491,21 +470,25 @@ describe('combohandler', function () {
             var IMPORTS_REBASED = TEMPLATE_IMPORTS.replace(/__PATH__/g, '/rewrite/')
                                                   .replace(/__DOTS__/g, '');
 
-            it("should allow webRoot without trailing slash", function (done) {
-                assertRequestBodyIs("/rewrite-root-noslash?urls.css", URLS_REBASED, done);
-            });
+            it("should allow webRoot without trailing slash", assertResponds({
+                path: "/rewrite-root-noslash?urls.css",
+                body: URLS_REBASED
+            }));
 
-            it("should rewrite valid urls", function (done) {
-                assertRequestBodyIs("/rewrite-root?urls.css&deeper/more.css", MORE_URLS_REBASED, done);
-            });
+            it("should rewrite valid urls", assertResponds({
+                path: "/rewrite-root?urls.css&deeper/more.css",
+                body: MORE_URLS_REBASED
+            }));
 
-            it("should NOT rewrite import paths when disabled", function (done) {
-                assertRequestBodyIs("/rewrite-root?imports.css", IMPORTS_UNMODIFIED, done);
-            });
+            it("should NOT rewrite import paths when disabled", assertResponds({
+                path: "/rewrite-root?imports.css",
+                body: IMPORTS_UNMODIFIED
+            }));
 
-            it("should rewrite import paths when enabled", function (done) {
-                assertRequestBodyIs("/rewrite-root-imports?imports.css", IMPORTS_REBASED, done);
-            });
+            it("should rewrite import paths when enabled", assertResponds({
+                path: "/rewrite-root-imports?imports.css",
+                body: IMPORTS_REBASED
+            }));
         });
     });
 
@@ -544,102 +527,51 @@ describe('combohandler', function () {
             combo.respond);
         });
 
-        it("should work when param found at end of path", function (done) {
-            request(BASE_URL + '/dynamic/decafbad?a.js&b.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('a();\n\nb();\n');
-                done();
-            });
-        });
+        it("should work when param found at end of path", assertResponds({
+            path: "/dynamic/decafbad?a.js&b.js",
+            body: "a();\n\nb();\n"
+        }));
 
-        it("should work when param found at beginning of path", function (done) {
-            request(BASE_URL + '/decafbad/param-first?a.js&static/c.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('a();\n\nc();\n');
-                done();
-            });
-        });
+        it("should work when param found at beginning of path", assertResponds({
+            path: "/decafbad/param-first?a.js&static/c.js",
+            body: "a();\n\nc();\n"
+        }));
 
-        it("should work when rootPath not passed to combine()", function (done) {
-            request(BASE_URL + '/dynamic/decafbad/empty-combo?c.js&d.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('c();\n\nd();\n');
-                done();
-            });
-        });
+        it("should work when rootPath not passed to combine()", assertResponds({
+            path: "/dynamic/decafbad/empty-combo?c.js&d.js",
+            body: "c();\n\nd();\n"
+        }));
 
-        it("should work when param found before end of path", function (done) {
-            request(BASE_URL + '/dynamic/decafbad/empty-combo?c.js&d.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('c();\n\nd();\n');
-                done();
-            });
-        });
+        it("should work when param found before end of path", assertResponds({
+            path: "/dynamic/decafbad/empty-combo?c.js&d.js",
+            body: "c();\n\nd();\n"
+        }));
 
-        it("should work when middleware is run twice on same route", function (done) {
-            request(BASE_URL + '/dynamic/decafbad/doubled?c.js&d.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('c();\n\nd();\n');
-                done();
-            });
-        });
+        it("should work when middleware is run twice on same route", assertResponds({
+            path: "/dynamic/decafbad/doubled?c.js&d.js",
+            body: "c();\n\nd();\n"
+        }));
 
-        it("should not fail when param not present", function (done) {
-            request(BASE_URL + '/non-dynamic?a.js&b.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('a();\n\nb();\n');
-                done();
-            });
-        });
+        it("should not fail when param not present", assertResponds({
+            path: "/non-dynamic?a.js&b.js",
+            body: "a();\n\nb();\n"
+        }));
 
-        it("should not fail when config missing", function (done) {
-            request(BASE_URL + '/dynamic-no-config?a.js&b.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('a();\n\nb();\n');
-                done();
-            });
-        });
+        it("should not fail when config missing", assertResponds({
+            path: "/dynamic-no-config?a.js&b.js",
+            body: "a();\n\nb();\n"
+        }));
 
-        it("should work when param only found in route, not rootPath", function (done) {
-            request(BASE_URL + '/route-only/deadbeef/lib?js/a.js&js/b.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                res.should.have.header('content-type', 'application/javascript; charset=utf-8');
-                res.should.have.header('last-modified');
-                body.should.equal('a();\n\nb();\n');
-                done();
-            });
-        });
+        it("should work when param only found in route, not rootPath", assertResponds({
+            path: "/route-only/deadbeef/lib?js/a.js&js/b.js",
+            body: "a();\n\nb();\n"
+        }));
 
-        it("should error when param does not correspond to existing path", function (done) {
-            request(BASE_URL + '/dynamic/deadbeef?a.js', function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(400);
-                body.should.equal('Bad request. Unable to resolve path: /dynamic/deadbeef');
-                done();
-            });
-        });
+        it("should error when param does not correspond to existing path", assertResponds({
+            path: "/dynamic/deadbeef?a.js",
+            body: "Bad request. Unable to resolve path: /dynamic/deadbeef",
+            status: 400
+        }));
     });
 
     // -- Complex Integration --------------------------------------------------
@@ -675,31 +607,19 @@ describe('combohandler', function () {
         ].join('\n');
         var SIMPLE_RAW = SIMPLE_IMPORTS_RAW + SIMPLE_URLS_RAW;
 
-        function assertRequestSuccess(reqPath, done) {
-            request(BASE_URL + reqPath, function (err, res, body) {
-                assert.ifError(err);
-                res.should.have.status(200);
-                done();
-            });
-        }
-
         describe("route with fully-qualified dynamic path", function () {
-            var combined = combo.combine({
-                webRoot : COMPLEX_ROOT,
-                rootPath: COMPLEX_ROOT + '/versioned/:version/base/'
-            });
+            before(function () {
+                var combined = combo.combine({
+                    webRoot : COMPLEX_ROOT,
+                    rootPath: COMPLEX_ROOT + '/versioned/:version/base/'
+                });
 
-            it("should read rootPath from filesystem directly", function (done) {
                 app.get("/c/:version/fs-fq", combined, function (req, res, next) {
                     var rootPath = res.locals.rootPath;
                     rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
                     next();
                 }, combo.respond);
 
-                assertRequestSuccess("/c/deeper/fs-fq?js/a.js&js/b.js", done);
-            });
-
-            it("should resolve rootPath through symlink", function (done) {
                 app.get("/c/:version/ln-fq", combined, function (req, res, next) {
                     var rootPath = res.locals.rootPath;
                     rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/shallower/base/'));
@@ -714,10 +634,6 @@ describe('combohandler', function () {
                     });
                 }, combo.respond);
 
-                assertRequestSuccess("/c/shallower/ln-fq?js/a.js&js/b.js", done);
-            });
-
-            it("should only rewrite url() through symlink, not imports", function (done) {
                 app.get("/c/:version/fq-noimports", combined, function (req, res, next) {
                     var rootPath = res.locals.rootPath;
                     rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/shallower/base/'));
@@ -732,20 +648,30 @@ describe('combohandler', function () {
 
                     next();
                 }, combo.respond);
-
-                assertRequestSuccess("/c/shallower/fq-noimports?css/urls/simple.css", done);
             });
+
+            it("should read rootPath from filesystem directly", assertResponds({
+                path: "/c/deeper/fs-fq?js/a.js&js/b.js"
+            }));
+
+            it("should resolve rootPath through symlink", assertResponds({
+                path: "/c/shallower/ln-fq?js/a.js&js/b.js"
+            }));
+
+            it("should only rewrite url() through symlink, not imports", assertResponds({
+                path: "/c/shallower/fq-noimports?css/urls/simple.css"
+            }));
         });
 
         describe("route with one-sided dynamic path", function () {
             describe("and rootPath symlinked shallower", function () {
-                var combined = combo.combine({
-                    rewriteImports: true,
-                    webRoot : COMPLEX_ROOT,
-                    rootPath: COMPLEX_ROOT + '/versioned/shallower/base/'
-                });
+                before(function () {
+                    var combined = combo.combine({
+                        rewriteImports: true,
+                        webRoot : COMPLEX_ROOT,
+                        rootPath: COMPLEX_ROOT + '/versioned/shallower/base/'
+                    });
 
-                it("should resolve files from realpath in filesystem", function (done) {
                     app.get("/c/:version/fs-shallow", combined, function (req, res, next) {
                         var rootPath = res.locals.rootPath;
                         rootPath.should.equal(path.join(COMPLEX_ROOT, '/base/'));
@@ -760,10 +686,6 @@ describe('combohandler', function () {
                         });
                     }, combo.respond);
 
-                    assertRequestSuccess("/c/cafebabe/fs-shallow?js/a.js&js/b.js", done);
-                });
-
-                it("should rewrite url() through symlink", function (done) {
                     app.get("/c/:version/ln-shallow", combined, function (req, res, next) {
                         var rootPath = res.locals.rootPath;
                         rootPath.should.equal(path.join(COMPLEX_ROOT, '/base/'));
@@ -776,19 +698,25 @@ describe('combohandler', function () {
 
                         next();
                     }, combo.respond);
-
-                    assertRequestSuccess("/c/cafebabe/ln-shallow?css/urls/simple.css", done);
                 });
+
+                it("should resolve files from realpath in filesystem", assertResponds({
+                    path: "/c/cafebabe/fs-shallow?js/a.js&js/b.js"
+                }));
+
+                it("should rewrite url() through symlink", assertResponds({
+                    path: "/c/cafebabe/ln-shallow?css/urls/simple.css"
+                }));
             });
 
             describe("and rootPath symlinked deeper", function () {
-                var combined = combo.combine({
-                    rewriteImports: true,
-                    webRoot : COMPLEX_ROOT,
-                    rootPath: COMPLEX_ROOT + '/deep-link/'
-                });
+                before(function () {
+                    var combined = combo.combine({
+                        rewriteImports: true,
+                        webRoot : COMPLEX_ROOT,
+                        rootPath: COMPLEX_ROOT + '/deep-link/'
+                    });
 
-                it("should read rootPath from filesystem directly", function (done) {
                     app.get("/c/:version/fs-deeper", combined, function (req, res, next) {
                         var rootPath = res.locals.rootPath;
                         rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
@@ -799,10 +727,6 @@ describe('combohandler', function () {
                         next();
                     }, combo.respond);
 
-                    assertRequestSuccess("/c/cafebabe/fs-deeper?js/a.js&js/b.js", done);
-                });
-
-                it("should *still* rewrite url() through symlink", function (done) {
                     app.get("/c/:version/ln-deeper", combined, function (req, res, next) {
                         var rootPath = res.locals.rootPath;
                         rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
@@ -817,10 +741,34 @@ describe('combohandler', function () {
 
                         next();
                     }, combo.respond);
-
-                    assertRequestSuccess("/c/cafebabe/ln-deeper?css/urls/simple.css", done);
                 });
+
+                it("should read rootPath from filesystem directly", assertResponds({
+                    path: "/c/cafebabe/fs-deeper?js/a.js&js/b.js"
+                }));
+
+                it("should *still* rewrite url() through symlink", assertResponds({
+                    path: "/c/cafebabe/ln-deeper?css/urls/simple.css"
+                }));
             });
         });
     });
+
+    // -- Helpers --------------------------------------------------------------
+    function assertResponds(config) {
+        var expectedPath = config.path;
+        var expectedBody = config.body;
+        var expectedStatus = config.status || 200;
+
+        return function (done) {
+            request(BASE_URL + config.path, function (err, res, body) {
+                assert.ifError(err);
+                res.should.have.status(expectedStatus);
+                if (expectedBody) {
+                    body.should.equal(expectedBody);
+                }
+                done();
+            });
+        };
+    }
 });
