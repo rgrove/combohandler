@@ -1,6 +1,19 @@
 Combo Handler History
 =====================
 
+0.3.6 (2013-10-18)
+------------------
+
+* The `dynamicPath` middleware now understands multiple parameters in a route.
+
+* Increased test coverage substantially.
+
+* All dependency versions are now explicit.
+
+* Updated express dependency to 3.4.0.
+
+* Updated should devDependency to 2.0.1.
+
 0.3.5 (2013-10-08)
 ------------------
 
