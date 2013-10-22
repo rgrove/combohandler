@@ -587,8 +587,20 @@ describe('combohandler', function () {
                     combo.combine({ rootPath: FIXTURES_DIR + "/dynamic/:major/:minor" }),
                 combo.respond);
 
-                app.get("/:major/separated/by/:minor",
+                app.get("/:major/separated/route/:minor",
                     combo.combine({ rootPath: FIXTURES_DIR + "/:major/:minor/static" }),
+                combo.respond);
+
+                app.get("/:major/separated/path/:minor",
+                    combo.combine({ rootPath: FIXTURES_DIR + "/:major/decafbad/:minor" }),
+                combo.respond);
+
+                app.get('/doubled-in-rootpath/:major',
+                    combo.combine({ rootPath: FIXTURES_DIR + '/dynamic/:major/:major' }),
+                combo.respond);
+
+                app.get('/doubled-with-suffixes/:major',
+                    combo.combine({ rootPath: FIXTURES_DIR + '/dynamic/:major/static/:major' }),
                 combo.respond);
             });
 
@@ -608,8 +620,23 @@ describe('combohandler', function () {
             }));
 
             it("should resolve route that has separated parameters", assertResponds({
-                path: "/dynamic/separated/by/decafbad?c.js&d.js",
+                path: "/dynamic/separated/route/decafbad?c.js&d.js",
                 body: "c();\n\nd();\n"
+            }));
+
+            it("should resolve root path that has separated parameters", assertResponds({
+                path: "/dynamic/separated/path/static?c.js&d.js",
+                body: "c();\n\nd();\n"
+            }));
+
+            it("should resolve route that has identical parameters in root path", assertResponds({
+                path: "/doubled-in-rootpath/baddecaf?e.js&f.js",
+                body: "e();\n\nf();\n"
+            }));
+
+            it("should resolve route that has separated identical parameters in root path", assertResponds({
+                path: "/doubled-with-suffixes/cafebabe?g.js&h.js",
+                body: "g();\n\nh();\n"
             }));
         });
     });
