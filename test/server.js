@@ -741,7 +741,7 @@ describe('combohandler', function () {
 
                     app.get("/c/:version/fs-shallow", combined, function (req, res, next) {
                         var rootPath = res.locals.rootPath;
-                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/base/'));
+                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/shallower/base/'));
 
                         var relativePath = res.locals.relativePaths[0];
                         relativePath.should.equal('js/a.js');
@@ -754,20 +754,19 @@ describe('combohandler', function () {
                     }, combo.respond);
 
                     app.get("/c/:version/ln-shallow", combined, function (req, res, next) {
-                        var rootPath = res.locals.rootPath;
-                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/base/'));
-
                         var relativePath = res.locals.relativePaths[0];
                         relativePath.should.equal('css/urls/simple.css');
 
                         // console.error(res.body);
-                        res.body.should.equal(TEMPLATE_SIMPLE.replace(/__ROOT__/g, '/base/'));
+                        var expected = TEMPLATE_SIMPLE
+                                        .replace(/__ROOT__/g, '/versioned/shallower/base/');
+                        res.body.should.equal(expected);
 
                         next();
                     }, combo.respond);
                 });
 
-                it("should resolve files from realpath in filesystem", assertResponds({
+                it("should resolve files from symlink in filesystem", assertResponds({
                     path: "/c/cafebabe/fs-shallow?js/a.js&js/b.js"
                 }));
 
@@ -786,24 +785,25 @@ describe('combohandler', function () {
 
                     app.get("/c/:version/fs-deeper", combined, function (req, res, next) {
                         var rootPath = res.locals.rootPath;
-                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
+                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/deep-link/'));
 
                         var relativePath = res.locals.relativePaths[0];
                         relativePath.should.equal('js/a.js');
 
-                        next();
+                        fs.realpath(path.join(rootPath, relativePath), function (err, resolved) {
+                            assert.ifError(err);
+                            resolved.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/', relativePath));
+                            next();
+                        });
                     }, combo.respond);
 
                     app.get("/c/:version/ln-deeper", combined, function (req, res, next) {
-                        var rootPath = res.locals.rootPath;
-                        rootPath.should.equal(path.join(COMPLEX_ROOT, '/versioned/deeper/base/'));
-
                         var relativePath = res.locals.relativePaths[0];
                         relativePath.should.equal('css/urls/simple.css');
 
                         // console.error(res.body);
                         var expected = TEMPLATE_SIMPLE
-                                        .replace(/__ROOT__/g, '/versioned/deeper/base/');
+                                        .replace(/__ROOT__/g, '/deep-link/');
                         res.body.should.equal(expected);
 
                         next();
