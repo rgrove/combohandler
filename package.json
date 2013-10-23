@@ -44,7 +44,7 @@
 
     "devDependencies": {
         "istanbul": "0.1.44",
-        "jshint"  : "2.1.11",
+        "jshint"  : "2.3.0",
         "mocha"   : "1.13.0",
         "request" : "2.27.0",
         "rimraf"  : "2.2.2",
