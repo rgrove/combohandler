@@ -1,6 +1,19 @@
 Combo Handler History
 =====================
 
+0.3.7 (2013-10-22)
+------------------
+
+* Fixed a few `dynamicPath` middleware edge cases with multiple and duplicate
+  route parameters.
+
+* Added --no-resolve-symlinks option that uses fs.statSync to validate rootPath
+  instead of fs.realpathSync. Caveat emptor.
+
+* Updated jshint devDependency to 2.3.0.
+
+* Updated should devDependency to 2.0.2.
+
 0.3.6 (2013-10-18)
 ------------------
 
