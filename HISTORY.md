@@ -1,6 +1,11 @@
 Combo Handler History
 =====================
 
+0.3.8 (2013-10-22)
+------------------
+
+* Fixed errant nopt config, acknowledging `--no-resolve-symlinks` when passed.
+
 0.3.7 (2013-10-22)
 ------------------
 
