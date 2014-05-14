@@ -210,9 +210,7 @@ the JSON file contents should follow this pattern:
 
 ```json
 {
-    "roots": {
-        "/yui3": "/local/path/to/yui3"
-    }
+    "/yui3": "/local/path/to/yui3"
 }
 ```
 
