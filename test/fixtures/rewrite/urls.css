@@ -13,3 +13,9 @@
 .nl-craziness { background:
     url(crazy.png
     ); }
+.min1{background:url(min1.jpg)}.min2{background:url(min2.gif)}
+.min1{background:url('min1.jpg')}.min2{background:url("min2.gif")}.min3{background:url('min3.png')}
+.min1{background:url('min1.jpg')}.min2{background:url('min2.gif')}
+.min1{background:url("min1.jpg")}.min2{background:url('min2.gif')}
+.min1{background:url(min1.jpg)}.min2{background:url('min2.gif')}
+.min1{background:url(min1.jpg)}.min2{background:url('min2.gif')}.min3{background:url(min3.png)}
