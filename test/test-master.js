@@ -515,7 +515,7 @@ describe("cluster master", function () {
 
                 instance.cluster.emit('online', worker.object);
 
-                instance.startupTimeout["1"].should.have.property('ontimeout', null);
+                instance.startupTimeout["1"].should.have.property('_onTimeout', null);
                 consoleError.restore();
             });
 
@@ -621,8 +621,8 @@ describe("cluster master", function () {
 
                 instance.cluster.emit('exit', { id: 1 });
 
-                instance.startupTimeout[1].should.have.property('ontimeout', null);
-                instance.closingTimeout[1].should.have.property('ontimeout', null);
+                instance.startupTimeout[1].should.have.property('_onTimeout', null);
+                instance.closingTimeout[1].should.have.property('_onTimeout', null);
             });
 
             describe("suicide", function () {
