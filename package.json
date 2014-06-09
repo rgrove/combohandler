@@ -43,13 +43,14 @@
     },
 
     "devDependencies": {
-        "istanbul": "0.1.44",
-        "jshint"  : "2.3.0",
-        "mocha"   : "1.13.0",
-        "request" : "2.27.0",
-        "rimraf"  : "2.2.2",
-        "should"  : "2.0.2",
-        "sinon"   : "1.7.3"
+        "istanbul": "0.2.10",
+        "jshint"  : "2.5.1",
+        "mocha"   : "1.20.1",
+        "request" : "2.36.0",
+        "rimraf"  : "2.2.8",
+        "should"  : "4.0.4",
+        "should-http": "0.0.2",
+        "sinon"   : "1.10.2"
     },
 
     "main": "index.js",

@@ -1,4 +1,6 @@
 /*global describe, before, after, it, sinon */
+require("should-http");
+
 var fs = require('fs');
 var path = require('path');
 

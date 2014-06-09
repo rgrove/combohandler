@@ -62,8 +62,7 @@ describe("cluster pidfiles", function () {
                 .returns("100");
 
             pidfiles.getWorkerPidsSync(PIDS_DIR)
-                .should.have.length(1)
-                    .and.contain(100);
+                .should.eql([100]);
         });
     });
 
