@@ -1,6 +1,16 @@
 Combo Handler History
 =====================
 
+0.4.0 (2014-08-04)
+------------------
+
+* Fixed non-whitespace captures to avoid errors when rewriting minified CSS
+  imports. (#80)
+
+* Added support for Express 4.7.3+ (thanks @natecavanaugh).
+
+* Updated dependency versions for mkdirp, nopt, and URIjs.
+
 0.3.8 (2013-10-22)
 ------------------
 
