@@ -1,74 +1,70 @@
 {
-    "name"       : "combohandler",
-    "description": "Simple Yahoo!-style combo handler.",
-    "version"    : "0.3.8",
-    "keywords"   : [
-        "combo", "combohandler", "combohandle", "combine", "cdn", "css", "yui"
-    ],
-
-    "homepage": "https://github.com/rgrove/combohandler",
-
-    "repository": {
-        "type": "git",
-        "url" : "git://github.com/rgrove/combohandler.git"
-    },
-
-    "author": {
-        "name" : "Ryan Grove",
-        "email": "ryan@wonko.com",
-        "url"  : "http://wonko.com/"
-    },
-
-    "engines": [
-        "node >=0.10"
-    ],
-
-    "jshintConfig": {
-        "curly"   : true,
-        "eqeqeq"  : true,
-        "forin"   : true,
-        "immed"   : true,
-        "newcap"  : true,
-        "noarg"   : true,
-        "noempty" : true,
-        "undef"   : true,
-        "node"    : true
-    },
-
-    "dependencies": {
-        "mkdirp" : "0.5.0",
-        "nopt"   : "3.0.1",
-        "express": "4.7.3",
-        "morgan" : "1.2.2",
-        "errorhandler": "1.1.1",
-        "URIjs"  : "1.13.2"
-    },
-
-    "devDependencies": {
-        "istanbul": "0.2.10",
-        "jshint"  : "2.5.1",
-        "mocha"   : "1.20.1",
-        "request" : "2.36.0",
-        "rimraf"  : "2.2.8",
-        "should"  : "4.0.4",
-        "should-http": "0.0.2",
-        "sinon"   : "1.10.2"
-    },
-
-    "main": "index.js",
-
-    "bin": "./bin/cli.js",
-
-    "directories": {"lib": "./lib"},
-
-    "config": {
-        "port": "8000",
-        "server": "./lib/server"
-    },
-
-    "scripts": {
-        "pretest": "jshint bin lib test/*.js",
-        "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha",
-        "posttest": "istanbul check-coverage --statements -9 --functions -2 --branches -9 --lines -7"
-    }
+  "name": "combohandler",
+  "description": "Simple Yahoo!-style combo handler.",
+  "version": "0.3.8",
+  "keywords": [
+    "combo",
+    "combohandler",
+    "combohandle",
+    "combine",
+    "cdn",
+    "css",
+    "yui"
+  ],
+  "homepage": "https://github.com/rgrove/combohandler",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rgrove/combohandler.git"
+  },
+  "author": {
+    "name": "Ryan Grove",
+    "email": "ryan@wonko.com",
+    "url": "http://wonko.com/"
+  },
+  "engines": [
+    "node >=0.10"
+  ],
+  "jshintConfig": {
+    "curly": true,
+    "eqeqeq": true,
+    "forin": true,
+    "immed": true,
+    "newcap": true,
+    "noarg": true,
+    "noempty": true,
+    "undef": true,
+    "node": true
+  },
+  "dependencies": {
+    "mkdirp": "0.5.0",
+    "nopt": "3.0.1",
+    "express": "4.7.3",
+    "morgan": "1.2.2",
+    "errorhandler": "1.1.1",
+    "URIjs": "1.13.2"
+  },
+  "devDependencies": {
+    "istanbul": "0.2.10",
+    "jshint": "2.5.1",
+    "mocha": "1.20.1",
+    "request": "2.36.0",
+    "rimraf": "2.2.8",
+    "should": "4.0.4",
+    "should-http": "0.0.2",
+    "sinon": "1.10.2"
+  },
+  "main": "index.js",
+  "bin": "./bin/cli.js",
+  "directories": {
+    "lib": "./lib"
+  },
+  "config": {
+    "port": "8000",
+    "server": "./lib/server"
+  },
+  "scripts": {
+    "pretest": "jshint bin lib test/*.js",
+    "test": "istanbul test --print both ./node_modules/mocha/bin/_mocha",
+    "posttest": "istanbul check-coverage --statements -9 --functions -2 --branches -9 --lines -7"
+  }
 }
