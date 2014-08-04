@@ -5,6 +5,7 @@ var fs = require('fs');
 var path = require('path');
 
 var combo   = require('../'),
+    express = require('express'),
     server  = require('../lib/server'),
 
     assert  = require('assert'),
@@ -35,6 +36,36 @@ describe('combohandler', function () {
 
     after(function (done) {
         httpServer.close(done);
+    });
+
+    it("should accept baseApp in server export", function () {
+        var baseApp = express();
+        var spyUse = sinon.spy(baseApp, "use");
+        server({}, baseApp);
+        spyUse.called.should.not.be.ok;
+        spyUse.restore();
+    });
+
+    it("should setup logger and errorHandler in development", function () {
+        process.env.NODE_ENV = '';// default = 'development'
+        var devApp = server({}),
+            routerStack = devApp._router.stack;
+
+        routerStack.should.be.an.Array.and.have.lengthOf(5);
+        routerStack[4].should.have.property("handle");
+        routerStack[4].handle.should.be.a.Function;
+        routerStack[4].handle.name.should.equal("comboErrorHandler");
+    });
+
+    it("should only use combo.errorHandler in baseless production env", function () {
+        process.env.NODE_ENV = 'production';
+        var prodApp = server({}),
+            routerStack = prodApp._router.stack;
+
+        routerStack.should.be.an.Array.and.have.lengthOf(3);
+        routerStack[2].should.have.property("handle");
+        routerStack[2].handle.should.be.a.Function;
+        routerStack[2].handle.name.should.equal("comboErrorHandler");
     });
 
     it("should return an array of middleware callbacks when invoked", function () {
@@ -571,8 +602,11 @@ describe('combohandler', function () {
 
         it("should error when param does not correspond to existing path", assertResponds({
             path: "/dynamic/deadbeef?a.js",
-            body: "Bad request. Unable to resolve path: /dynamic/deadbeef",
-            status: 400
+            // body: "Bad request. Unable to resolve path: /dynamic/deadbeef",
+            // status: 400
+            status: 500
+            // Express 4.x removes app.router, so the default error handler is used.
+            // (these tests should be split into separate files, anyhow)
         }));
 
         describe("with multiple parameters", function () {
