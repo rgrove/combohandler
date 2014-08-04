@@ -40,7 +40,7 @@
         "nopt"   : "3.0.1",
         "express": "4.4.2",
         "morgan" : "1.1.1",
-        "errorhandler": "1.0.2",
+        "errorhandler": "1.1.1",
         "URIjs"  : "1.13.2"
     },
 
